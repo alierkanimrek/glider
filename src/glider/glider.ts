@@ -102,7 +102,7 @@ function buildGHTMLBlockFromArray(j:any, r:GHTMLElement):void {
     /*
     */
     console.log("______")
-    console.log(r)
+    //console.log(r)
     for (const s in j){
         const e = j[s]
         if(typeof e === "object"){
@@ -111,13 +111,12 @@ function buildGHTMLBlockFromArray(j:any, r:GHTMLElement):void {
             const i = e.indexOf(" ")
             let t = ""
             let p = {}
-            if (i == -1) { 
+            if (i == -1) {
                 t = e
             } else {
                 t = e.slice(0,i)
-                p = "{"+e.slice(i+1)+"}"
+                p = eval("{"+e.slice(i+1)+"}")
             }
-
             console.log(t)
             console.log(p)
          }
