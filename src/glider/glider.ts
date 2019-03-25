@@ -55,7 +55,7 @@ function injectGHTMLElement(t:HTMLElement):GHTMLElement{
 
 
 
-export function root(n : string):null|GHTMLElement {
+export function gRoot(n : string):null|GHTMLElement {
     /*
     Find HTML element by Id and 
     enhance it as Glider element 
@@ -127,37 +127,92 @@ function buildGHTMLBlockFromArray(j:any, r:GHTMLElement):void {
 
 
 
-
-export function createGHTML(j:any, r?:string):null|GHTMLElement{
-    /*
-    Create GHTML Elements from j Array
-    The first string of j must be root element id
-    r option is override value of root element
-    j = [<string>, [...]]
-
-    let o:Object
-
-    try {
-        o = JSON.parse(j)
+function gHTMLStrRootIndex(a:any):number {
+    for (const l in a){
+        if (a[l].trim().length > 0) {
+            return(Number(l))
+        }
     }
-    catch(err) {
-        console.log(err)
-        return
-    }
-    */
-    let re
-    if (r) { 
-        re = root(r)
-    } else {
-        re = root(j[0])
-    }
-    
-    if (re == null) { 
-        return
-    } else {
-        buildGHTMLBlockFromArray(j[1], re)
-    }
-
+    return(-1)
 }
+
+
+
+function gHTMLStrIndent(a:string):string {
+    const f = a.search(/[A-Z]/i)
+    return(a.substring(0,f))
+}
+
+
+
+
+
+function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
+    a = a.trim()
+    const i = a.indexOf(" ")
+    let t = ""    //Tag name
+    let p = {}    //Properties
+    if (i == -1) {    //No properties
+        t = a
+    } else {
+        t = a.slice(0,i)
+        eval("p = {"+a.slice(i+1)+"}")
+        //***********FIX Error check***************
+    }
+    return(r.add(t,p))
+}
+
+
+
+
+
+export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
+    /*
+    Create GHTML Elements from GHTML String
+    The first string of ghtml must be root element id
+    root option is override value of root element
+    */
+    //Split lines
+    let lines = ghtmlstr.split(/\r?\n/)
+
+    //Find root line number
+    const rootLine = gHTMLStrRootIndex(lines)
+
+    //Get root Element Id
+    let rootId = lines[rootLine].trim()
+    if (root) {
+        rootId = root
+    }
+
+    //Prepare root element for add
+    let parents = [gRoot(rootId)]
+    //***********FIX check root***************
+
+    //Indent
+    let ind = null
+
+    //Every lines of GHTMLStr after rootLine
+    for (let i = rootLine + 1; i < lines.length - 1; i++) {
+
+        //Empty line
+        if (!lines[i].trim()) {         continue        }
+
+        //Get indent from first element line
+        if (!ind){    ind = gHTMLStrIndent(lines[i])    }
+        //**********FIX Indent check procedure****************
+
+        //Makes an array starts with indents ["","","","DIV ..."] and get level
+        const h = lines[i].split(ind)
+        const l = h.length - 1
+
+        //Create Element and add parents level for next element
+        parents[l] = createGHTMLElement(lines[i], parents[l-1])
+    }
+
+    return(parents[0])
+}
+
+
+
 
 
