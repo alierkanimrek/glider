@@ -156,12 +156,50 @@ function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
         t = a
     } else {
         t = a.slice(0,i)
-        eval("p = {"+a.slice(i+1)+"}")
+        p = prop2Obj(a.slice(i+1))
         //***********FIX Error check***************
     }
     return(r.add(t,p))
 }
 
+
+
+
+function prop2Obj(a:string):object{
+
+    let s = a.split("=")
+    let l = []    //Will contain keys and values
+    let res:{[key:string]:string} = {}    //Result object
+
+    //Push every keys and values into array
+    for (let i in s) {
+
+        //Find space for start position of key
+        let n = s[i].trim().lastIndexOf(" ")
+
+        //Check key=value or only key
+        if(n>-1){
+
+            //Get value of previous key
+            l.push(s[i].slice(0,n).trim())
+            //Get key
+            l.push(s[i].slice(n).trim())
+        }
+        else{
+
+            //Get key
+            l.push(s[i].trim())    
+        }
+    }
+
+    //Make an indexed object as key:value...
+    for (var i = 0; i < l.length; i+=2) {
+        res[l[i]] = l[i+1]
+    }
+
+    return(res)
+    
+}
 
 
 
