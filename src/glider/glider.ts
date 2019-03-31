@@ -170,12 +170,17 @@ function prop2Obj(a:string):object{
     let s = a.split("=")
     let l = []    //Will contain keys and values
     let res:{[key:string]:string} = {}    //Result object
-
+    
     //Push every keys and values into array
     for (let i in s) {
 
         //Find space for start position of key
         let n = s[i].trim().lastIndexOf(" ")
+
+        //Last item is always an value, don't split it
+        if(Number(i) == s.length-1){
+            n=-1
+        }
 
         //Check key=value or only key
         if(n>-1){
@@ -190,7 +195,9 @@ function prop2Obj(a:string):object{
             //Get key
             l.push(s[i].trim())    
         }
+        
     }
+
 
     //Make an indexed object as key:value...
     for (var i = 0; i < l.length; i+=2) {
@@ -242,7 +249,7 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
         //Makes an array starts with indents ["","","","DIV ..."] and get level
         const h = lines[i].split(ind)
         const l = h.length - 1
-
+        
         //Create Element and add parents level for next element
         parents[l] = createGHTMLElement(lines[i], parents[l-1])
     }
