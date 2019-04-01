@@ -1,8 +1,49 @@
-import {GHTMLElement, DomProperties} from "./ifs"
-import * as tool from "./tools"
+/*
+The MIT License (MIT)
+
+Copyright © 2019 Ali E.İMREK <alierkanimrek@gmail.com>
+
+Permission is hereby granted, free of charge, 
+to any person obtaining a copy of this software and 
+associated documentation files (the “Software”), 
+to deal in the Software without restriction, 
+including without limitation the rights to use, copy, 
+modify, merge, publish, distribute, sublicense, 
+and/or sell copies of the Software, and to permit persons to 
+whom the Software is furnished to do so, subject 
+to the following conditions:
+
+The above copyright notice and this permission notice shall be 
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
+ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 
 
+
+
+
+
+
+export interface DomProperties {
+    [name: string]: string | boolean
+}
+
+
+
+
+export class GHTMLElement extends HTMLElement{
+
+    add(tag:string, options?:DomProperties | null):GHTMLElement{ return(this) }
+    addGs(gs:string):GHTMLElement{ return(this) }
+}
 
 
 
@@ -19,25 +60,40 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
     let e = document.createElement(tag)
 
     if(options){
+
         //Get dom properties as Array
         let p = Object.getPrototypeOf(e)
         let ps = [...Object.keys(p), ...Object.keys(Object.getPrototypeOf(p))]
         
         for (const key of Object.keys(options)) {
+        
             //Check every option is an attribute or property
             const val = options[key]
             const i = ps.indexOf(key)
+        
             if ( i > -1) {
                 //is a property
                 eval("e."+key+" = val")
+        
             } else {
                 //is an attribute
                 e.setAttribute(key, String(val))
             }
         }
     }
+
     this.appendChild(e)
     return(injectGHTMLElement(e))
+}
+
+
+
+
+function addGs(a:string):GHTMLElement {
+    /*
+    Create element from gString
+    */
+    return(createGHTMLElement(a, this))
 }
 
 
@@ -48,7 +104,7 @@ function injectGHTMLElement(t:HTMLElement):GHTMLElement{
     Injects Glider functions and 
     properties to HTML element
     */
-    let g = <GHTMLElement>Object.assign(t, {"add":add})
+    let g = <GHTMLElement>Object.assign(t, {"add":add, "addGs":addGs})
     return(g)
 }
 
@@ -61,6 +117,7 @@ export function gRoot(n : string):null|GHTMLElement {
     enhance it as Glider element 
     */
     let root = document.getElementById(n)
+
     if (root == null) { 
         console.log("Root element not found")
         return
@@ -72,62 +129,10 @@ export function gRoot(n : string):null|GHTMLElement {
 
 
 
-/*function buildGHTMLBlockFromGJSON(o:Object):GHTMLElement|void {
-    /*
-    Creates GHTML Elements from GJSON object recursively
-    *//*
-    let op = <{[key: string]: object}>o
-    for (const e in op) {
-        const child = <Object>op[e]
-        const i = e.indexOf(" ")
-        let t = ""
-        let p = {}
-        if (i == -1) { 
-            t = e
-        } else {
-            t = e.slice(0,i)
-            p = "{"+e.slice(i+1)+"}"
-        }
-
-        console.log(t)
-        console.log(p)
-        console.log("____")
-        buildGHTMLBlockFromGJSON(child)
-    }
-}
-*/
-
-
-function buildGHTMLBlockFromArray(j:any, r:GHTMLElement):void {
-    /*
-    */
-    console.log("______")
-    //console.log(r)
-    for (const s in j){
-        const e = j[s]
-        if(typeof e === "object"){
-            buildGHTMLBlockFromArray(e, r)
-        } else {
-            const i = e.indexOf(" ")
-            let t = ""
-            let p = {}
-            if (i == -1) {
-                t = e
-            } else {
-                t = e.slice(0,i)
-                p = eval("{"+e.slice(i+1)+"}")
-            }
-            console.log(t)
-            console.log(p)
-         }
-    }
-
-}
-
-
-
-
 function gHTMLStrRootIndex(a:any):number {
+    /*
+    Finds first line 
+    */
     for (const l in a){
         if (a[l].trim().length > 0) {
             return(Number(l))
@@ -138,7 +143,11 @@ function gHTMLStrRootIndex(a:any):number {
 
 
 
+
 function gHTMLStrIndent(a:string):string {
+    /*
+    Finds space 
+    */
     const f = a.search(/[A-Z]/i)
     return(a.substring(0,f))
 }
@@ -146,8 +155,11 @@ function gHTMLStrIndent(a:string):string {
 
 
 
-
 function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
+    /*
+    Parse Tag and Properties from string
+    and adds it to the r element 
+    */
     a = a.trim()
     const i = a.indexOf(" ")
     let t = ""    //Tag name
@@ -166,6 +178,9 @@ function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
 
 
 function prop2Obj(a:string):object{
+    /*
+    Creates an object from properties string
+    */
 
     let s = a.split("=")
     let l = []    //Will contain keys and values
@@ -256,8 +271,3 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
 
     return(parents[0])
 }
-
-
-
-
-
