@@ -271,3 +271,16 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
 
     return(parents[0])
 }
+
+
+
+
+
+export class GHTMLControl {
+
+    rootElement:GHTMLElement
+    
+    constructor(view:string, root?:string) {
+        this.rootElement = createGHTML(view, root)
+    }
+}
