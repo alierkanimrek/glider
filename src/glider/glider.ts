@@ -148,7 +148,7 @@ function gHTMLStrIndent(a:string):string {
     /*
     Finds space 
     */
-    const f = a.search(/[A-Z]/i)
+    const f = a.search(/[\S]/i)
     return(a.substring(0,f))
 }
 
@@ -262,8 +262,15 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
         //**********FIX Indent check procedure****************
 
         //Makes an array starts with indents ["","","","DIV ..."] and get level
-        const h = lines[i].split(ind)
-        const l = h.length - 1
+        const h = gHTMLStrIndent(lines[i]).split(ind)
+        const l = h.length-1
+
+        //Check ^ command for add innerHTML
+        if (lines[i].trim()[0] == "^") {
+            let itxt = lines[i].slice(gHTMLStrIndent(lines[i]).length)
+            parents[l].innerHTML = itxt.slice(1)
+            continue
+        }
         
         //Create Element and add parents level for next element
         parents[l] = createGHTMLElement(lines[i], parents[l-1])

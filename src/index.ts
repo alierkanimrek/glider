@@ -1,6 +1,5 @@
-import {gRoot, createGHTML} from "./glider/glider"
-
-
+import {gRoot, createGHTML, GHTMLControl} from "./glider/glider"
+import {loginView} from "./login"
 
 
 let msg="Hello world"
@@ -54,11 +53,16 @@ mybox
 
 
 
-createGHTML(gString1)
-createGHTML(gString2)
+//createGHTML(gString1)
+//createGHTML(gString2)
+//let n1 = new GHTMLControl(gString1)
+console.log(loginView)
+let login = new GHTMLControl(loginView)
 
 
+/*
 let servers = gRoot("ServerList")
 for (var i = 0; i < serverList.length; i++) {
     servers.addGs(`option innerText=${serverList[i]}`)
 }
+*/

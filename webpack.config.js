@@ -4,7 +4,7 @@ module.exports = {
     mode: 'development',
     entry: "./src/index.ts",
     resolve: {
-        extensions: ['.ts']
+        extensions: ['.js', '.ts', '.css', '.ghtml']
     },
     output: {
         filename: "[name].bundle.js",
@@ -16,6 +16,15 @@ module.exports = {
             {
                 test: /\.ts$/,
                 loader: "awesome-typescript-loader"
+            },
+            {
+                test:/\.css$/,
+                exclude: /node_modules/,
+                use:['style-loader','css-loader']
+            },
+            {
+            test: /\.ghtml$/,
+            use: 'raw-loader',
             }
         ]
     }
