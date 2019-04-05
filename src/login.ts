@@ -1,5 +1,12 @@
 import {GHTMLControl} from "./glider/glider"
 import "./login.css"
-import loginGHTML from './login.ghtml'
+import loginView from './login.ghtml'
 
-export let loginView = loginGHTML
+
+
+export class Login extends GHTMLControl {
+    
+    constructor() {
+        super(loginView)
+    }
+}
