@@ -8,5 +8,6 @@ export class Login extends GHTMLControl {
     
     constructor() {
         super(loginView)
+        
     }
 }

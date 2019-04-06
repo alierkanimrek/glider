@@ -52,6 +52,16 @@ export class GHTMLElement extends HTMLElement{
 
 
 
+
+
+
+
+
+
+
+
+
+
 function add(tag:string, options?:DomProperties):GHTMLElement{
     /*
     Creates an HTML element with options 
@@ -281,13 +291,128 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
 
 
 
+function uuid():string {
+    const a = window.crypto.getRandomValues(new Uint32Array(10))
+    return(Array.from(a, (dec)=>{return('0' + dec.toString(16)).substr(-2)}).join(''))
+}
+
+
+
+
+
+
+
 
 
 export class GHTMLControl {
+    /*
+    View Control object
+    */
 
-    rootElement:GHTMLElement
+    private rootElement:GHTMLElement
+    private gDoc:GDoc
+    public id:string
     
+
+
+
     constructor(view:string, root?:string) {
+        
+        //Generate UUID 
+        this.id = uuid()
+
+        //Create static view
         this.rootElement = createGHTML(view, root)
+
+        //Link for global Glider object
+        this.gDoc = GDocument
+
+        //Register itself to global object for custom events
+        this.gDoc.register(this)
+    }
+
+
+
+
+    private navigate():void{
+        /*
+        This only triggers from GDocument navigation event
+        Clears for all childs and unregister from GDocument
+        */
+        while(this.rootElement.children[0]){
+            this.rootElement.children[0].remove()
+        }
+        this.gDoc.unregister(this)
+    }
+
+
+}
+
+
+
+
+
+
+
+
+class GDoc{
+    /*
+    This class contains gLobal variables, events and processes
+    Every GHTML object links and get events etc.
+    */    
+    
+    //Linked GHTMLControl objects for event dispatching
+    private controls:any
+
+
+    constructor(route?:any) {
+        console.log("Glider initializing...")
+
+        //Watch navigation 
+        window.addEventListener("popstate", this.navigate.bind(this))
+
+        this.controls = []
+
+    }
+
+
+
+
+    private navigate(e:Event){
+        /*
+        Navigation event handler
+        */
+        this.controls.forEach((c: any) => {
+            try{    c.navigate()    }
+            catch{}
+        })
+    }
+
+
+
+
+    register(c:GHTMLControl):void{
+        /**/
+        this.controls.push(c)
+    }
+
+
+
+
+    unregister(c:GHTMLControl):void{
+        /**/
+        this.controls = this.controls.filter( (cr:GHTMLControl) => {
+            return cr.id !== c.id
+        })
     }
 }
+
+
+
+
+
+
+
+
+//Global object for management glider application
+export let GDocument = new GDoc()
