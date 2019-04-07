@@ -4,8 +4,29 @@ import {Login} from "./login"
 
 
 
+function login():void{
+    
+    let login = new Login()
+    login.run()
+}
 
-let login = new Login()
+
+function test():void{
+    
+    console.log("test")
+}
+
+let route = [
+    {'' : login},
+    {'/test' : test},
+]
+
+
+
+GDocument.route(route)
+//GDocument.run(login)
+
+
 /*
 class MyApp extends GDocument {
     
@@ -26,6 +47,6 @@ class MyApp extends GDocument {
 
 
 //history.replaceState({page: 1}, "title 1", "?page=1")
-window.location.hash = "/?page=1"
+//window.location.hash = "/?page=1"
 //console.log(window.location)
 //console.log(document.)

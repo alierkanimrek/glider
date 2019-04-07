@@ -25,7 +25,7 @@ approot
               button class=button is-block is-info is-large is-fullwidth 
               ^ Login
           p class=has-text-grey
-            a href=.. 
+            a  id=signup
             ^ Sign Up&nbsp;&nbsp;&nbsp;
             a href=.. 
             ^ Forgot Password&nbsp;&nbsp;&nbsp;

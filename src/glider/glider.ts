@@ -47,9 +47,16 @@ export class GHTMLElement extends HTMLElement{
 
 
 
+export interface HTMLElementCollection {
+    [e:string]: HTMLElement
+}
 
 
+interface RouteObj {
+    [path:string]:Function
+}
 
+export interface Route extends Array<RouteObj> { }
 
 
 
@@ -83,7 +90,10 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
         
             if ( i > -1) {
                 //is a property
-                eval("e."+key+" = val")
+                //eval("e."+key+" = val")
+                //Object.defineProperty(e,key,val)
+                e.setAttribute(key, <string>val)
+                
         
             } else {
                 //is an attribute
@@ -103,7 +113,7 @@ function addGs(a:string):GHTMLElement {
     /*
     Create element from gString
     */
-    return(createGHTMLElement(a, this))
+    return(createGHTMLElement(a, this.control, this))
 }
 
 
@@ -165,7 +175,7 @@ function gHTMLStrIndent(a:string):string {
 
 
 
-function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
+function createGHTMLElement(a:string, r:GHTMLElement, c:GHTMLControl): GHTMLElement{
     /*
     Parse Tag and Properties from string
     and adds it to the r element 
@@ -181,7 +191,16 @@ function createGHTMLElement(a:string, r:GHTMLElement): GHTMLElement{
         p = prop2Obj(a.slice(i+1))
         //***********FIX Error check***************
     }
-    return(r.add(t,p))
+
+    //Create element
+    let e = r.add(t,p)
+    //Add control link to Dom
+    Object.defineProperty(e,"control", {value:c})
+    if(e.id !== ""){
+        c.e[e.id] = e
+    }
+
+    return(e)
 }
 
 
@@ -236,7 +255,7 @@ function prop2Obj(a:string):object{
 
 
 
-export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
+export function createGHTML(ghtmlstr:string, control:GHTMLControl, root?:string):null|GHTMLElement{
     /*
     Create GHTML Elements from GHTML String
     The first string of ghtml must be root element id
@@ -253,7 +272,7 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
     if (root) {
         rootId = root
     }
-
+    
     //Prepare root element for add
     let parents = [gRoot(rootId)]
     //***********FIX check root***************
@@ -283,7 +302,7 @@ export function createGHTML(ghtmlstr:string, root?:string):null|GHTMLElement{
         }
         
         //Create Element and add parents level for next element
-        parents[l] = createGHTMLElement(lines[i], parents[l-1])
+        parents[l] = createGHTMLElement(lines[i], parents[l-1], control)
     }
 
     return(parents[0])
@@ -304,6 +323,7 @@ function uuid():string {
 
 
 
+
 export class GHTMLControl {
     /*
     View Control object
@@ -311,30 +331,34 @@ export class GHTMLControl {
 
     private rootElement:GHTMLElement
     private gDoc:GDoc
-    public id:string
+    public  id:string
+    public  e:HTMLElementCollection
     
 
 
 
     constructor(view:string, root?:string) {
         
+        this.e = {}
+
         //Generate UUID 
         this.id = uuid()
 
-        //Create static view
-        this.rootElement = createGHTML(view, root)
 
         //Link for global Glider object
         this.gDoc = GDocument
 
         //Register itself to global object for custom events
         this.gDoc.register(this)
+
+        //Create static view
+        this.rootElement = createGHTML(view, this, root)
+
     }
 
 
 
-
-    private navigate():void{
+    navigate():void{
         /*
         This only triggers from GDocument navigation event
         Clears for all childs and unregister from GDocument
@@ -342,8 +366,9 @@ export class GHTMLControl {
         while(this.rootElement.children[0]){
             this.rootElement.children[0].remove()
         }
-        this.gDoc.unregister(this)
     }
+
+
 
 
 }
@@ -364,14 +389,20 @@ class GDoc{
     //Linked GHTMLControl objects for event dispatching
     private controls:any
 
+    private routes:Route
+    private basePath: string
+    private fileProtocol:boolean
 
-    constructor(route?:any) {
+
+    constructor() {
         console.log("Glider initializing...")
 
         //Watch navigation 
         window.addEventListener("popstate", this.navigate.bind(this))
 
         this.controls = []
+        this.basePath = ""
+        this.fileProtocol = true
 
     }
 
@@ -382,10 +413,12 @@ class GDoc{
         /*
         Navigation event handler
         */
-        this.controls.forEach((c: any) => {
+        this.controls.forEach((c: GHTMLControl) => {
             try{    c.navigate()    }
             catch{}
         })
+        this.controls = []
+        this.run()
     }
 
 
@@ -402,8 +435,90 @@ class GDoc{
     unregister(c:GHTMLControl):void{
         /**/
         this.controls = this.controls.filter( (cr:GHTMLControl) => {
-            return cr.id !== c.id
+            return(cr.id !== c.id)
         })
+    }
+
+
+
+
+    route(r:Route, bp?:string):void{
+        /**/
+        this.routes = r
+        if(bp){    this.basePath = bp    }
+        this.run()
+    }
+
+
+
+    private getRoute():Function|null {
+        /*
+        Search route function
+        */
+
+        let entry = null
+        let path = ""
+        
+        // App is an local file
+        if (this.fileProtocol) {
+
+            // Browsers adds # character for local jumping
+            // We should remove file path and # character from uri
+            this.basePath = location.href.split("#")[0]
+            path = location.href.replace("#", "")
+            path = path.replace(this.basePath, "")
+        }
+
+        // App is loaded from a server
+        else{
+            path = location.pathname.replace(this.basePath, "")
+        }
+
+
+        //Find entry function according to routes
+        for (let i = 0; i < this.routes.length; i++) {
+            let p = Object.keys(this.routes[i])[0]
+            let f = this.routes[i][p]
+
+            //Check full matching
+            if(p == path){
+                entry = f
+                break
+            }
+
+            //Check RegExp matching if it is not empty 
+            if(RegExp(p).test(path) && p !== ""){
+                entry = f
+                break
+            }
+        }
+        return(entry)
+    }
+
+
+
+
+    private run():void{
+        /**/
+
+        let entry = this.getRoute()
+
+        // May be not fonud
+        if(!entry){
+            console.log("Url not macth any route")
+            return
+        }
+
+        // Check DOM is ready
+        if(document.readyState == "complete"){
+            console.log("Runnig the application...")
+            entry()
+        }
+
+        // Not ready
+        else{
+            setTimeout(this.run.bind(this), 1)
+        }
     }
 }
 
