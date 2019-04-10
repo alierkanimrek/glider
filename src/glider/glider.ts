@@ -281,7 +281,7 @@ export function createGHTML(ghtmlstr:string, control:GHTMLControl, root?:string)
     let ind = null
 
     //Every lines of GHTMLStr after rootLine
-    for (let i = rootLine + 1; i < lines.length - 1; i++) {
+    for (let i = rootLine + 1; i < lines.length; i++) {
 
         //Empty line
         if (!lines[i].trim()) {         continue        }
