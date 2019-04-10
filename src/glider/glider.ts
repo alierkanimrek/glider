@@ -48,7 +48,7 @@ export class GHTMLElement extends HTMLElement{
 
 
 export interface HTMLElementCollection {
-    [e:string]: HTMLElement
+    [e:string]: GHTMLElement
 }
 
 
@@ -90,9 +90,9 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
         
             if ( i > -1) {
                 //is a property
-                //eval("e."+key+" = val")
+                eval("e."+key+" = val")
                 //Object.defineProperty(e,key,val)
-                e.setAttribute(key, <string>val)
+                //e.setAttribute(key, <string>val)
                 
         
             } else {
@@ -329,7 +329,7 @@ export class GHTMLControl {
     View Control object
     */
 
-    private rootElement:GHTMLElement
+    protected rootElement:GHTMLElement
     private gDoc:GDoc
     public  id:string
     public  e:HTMLElementCollection
