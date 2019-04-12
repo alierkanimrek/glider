@@ -75,7 +75,9 @@ export interface StoreObject {
 }
 
 
-
+interface Store {
+    [name:string]:GDataObject
+}
 
 
 
@@ -345,6 +347,7 @@ export class GHTMLControl {
     private gDoc:GDoc
     public  id:string
     public  e:HTMLElementCollection
+    private storeName : string = ""
     
 
 
@@ -370,7 +373,7 @@ export class GHTMLControl {
 
 
 
-    navigate():void{
+    public navigate():void{
         /*
         This only triggers from GDocument navigation event
         Clears for all childs and unregister from GDocument
@@ -382,6 +385,13 @@ export class GHTMLControl {
 
 
 
+    protected store(storeName:string):void{
+        /*
+        Connect control and data store
+        */
+        this.storeName = storeName
+        this.gDoc.bindStore(this, this.storeName)
+    }
 
 }
 
@@ -402,7 +412,7 @@ class GDoc{
     private controls:any
 
     //Data Store Meneger
-    public  store:GData
+    private  store: Store
 
     //Routing Manager
     private routes:Route
@@ -412,19 +422,38 @@ class GDoc{
 
 
 
-    constructor(gData:GData) {
+    constructor() {
         console.log("Glider initializing...")
 
         //Watch navigation 
         window.addEventListener("popstate", this.navigate.bind(this))
 
         this.controls = []
-        this.store = gData
         this.basePath = ""
-        this.fileProtocol = true
-
+        
+        this.fileProtocol = false
+        if(location.protocol=="file:"){
+            this.fileProtocol = true
+        }
     }
 
+
+    public stores(store:Store):void{
+        this.store = store
+    }
+
+
+
+    public bindStore(control:GHTMLControl, sname:string):boolean{
+        /*
+        */
+        if(Object.keys(this.store).toString().search(sname) > -1){
+            this.store[sname].bind(control)
+            //control.bind(this.store[sname])
+        }
+        else{    return(false)    }
+        return(true)
+    }
 
 
 
@@ -443,7 +472,7 @@ class GDoc{
 
 
 
-    register(c:GHTMLControl):void{
+    public register(c:GHTMLControl):void{
         /**/
         this.controls.push(c)
     }
@@ -451,7 +480,7 @@ class GDoc{
 
 
 
-    unregister(c:GHTMLControl):void{
+    public unregister(c:GHTMLControl):void{
         /**/
         this.controls = this.controls.filter( (cr:GHTMLControl) => {
             return(cr.id !== c.id)
@@ -461,7 +490,7 @@ class GDoc{
 
 
 
-    route(r:Route, bp?:string):void{
+    public route(r:Route, bp?:string):void{
         /**/
         this.routes = r
         if(bp){    this.basePath = bp    }
@@ -553,10 +582,17 @@ class GDataControl{
 
 export class GDataObject extends GDataControl {
     
-    constructor(gData:) {
+
+    private control:GHTMLControl
+
+    constructor() {
         super()
     }
 
+
+    public bind(control:GHTMLControl):void{
+        this.control = control
+    }
 
 
 }
@@ -566,4 +602,4 @@ export class GDataObject extends GDataControl {
 
 
 //Global object for management glider application
-export let GDocument = new GDoc(new GData)
+export let GDocument = new GDoc()

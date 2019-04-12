@@ -1,5 +1,5 @@
 import {GDocument} from "./glider/glider"
-import {Login} from "./login"
+import {Login, LoginData} from "./login"
 
 
 
@@ -22,28 +22,14 @@ let route = [
 ]
 
 
-
-
-GDocument.route(route)
-//GDocument.run(login)
-
-
-/*
-class MyApp extends GDocument {
-    
-    constructor() {
-        super()
-    }
-
-    load():void{
-        
-    }
+let store = {
+    login: new LoginData(),
+    test: new LoginData()
 }
-*/
 
 
-
-
+GDocument.stores(store)
+GDocument.route(route)
 
 
 

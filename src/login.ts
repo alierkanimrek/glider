@@ -20,6 +20,7 @@ export class Login extends GHTMLControl {
     constructor() {
         super(loginView)
         this.e["signup"].onclick = this.submit.bind(this)
+        this.store("login")
     }
 
     submit(e:Event){
@@ -34,26 +35,26 @@ export class Login extends GHTMLControl {
 
 
 
-
-
+/*
 let loginData = [
 	{name:"uname", type:"string", target:"uname", flow: Direction.both} as StoreObject,
 	{name:"password", type:"string", target:"uname", flow: Direction.both} as StoreObject,
 ]
+*/
 
 
 
-
-class LoginData extends GDataObject {
+export class LoginData extends GDataObject {
 	
-	constructor() {
-		super(loginData)
+	
+    uname : string
+    passw : string
+
+
+    constructor() {
+		super()
+        this.uname = ""
+        this.passw = ""
 	}
 
-
 }
-
-
-
-
-
