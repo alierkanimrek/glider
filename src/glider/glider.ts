@@ -60,7 +60,19 @@ export interface Route extends Array<RouteObj> { }
 
 
 
+export enum Direction {
+    toUi,
+    toStore,
+    both
+}
 
+
+export interface StoreObject {
+    name:string,
+    type:any,
+    target:string,
+    flow: Direction
+}
 
 
 
@@ -389,18 +401,25 @@ class GDoc{
     //Linked GHTMLControl objects for event dispatching
     private controls:any
 
+    //Data Store Meneger
+    public  store:GData
+
+    //Routing Manager
     private routes:Route
+
     private basePath: string
     private fileProtocol:boolean
 
 
-    constructor() {
+
+    constructor(gData:GData) {
         console.log("Glider initializing...")
 
         //Watch navigation 
         window.addEventListener("popstate", this.navigate.bind(this))
 
         this.controls = []
+        this.store = gData
         this.basePath = ""
         this.fileProtocol = true
 
@@ -526,8 +545,25 @@ class GDoc{
 
 
 
+class GDataControl{
+    
+}
+
+
+
+export class GDataObject extends GDataControl {
+    
+    constructor(gData:) {
+        super()
+    }
+
+
+
+}
+
+
 
 
 
 //Global object for management glider application
-export let GDocument = new GDoc()
+export let GDocument = new GDoc(new GData)

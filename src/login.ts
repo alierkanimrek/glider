@@ -1,6 +1,17 @@
-import {GHTMLControl} from "./glider/glider"
+import {GHTMLControl, GDocument, GDataObject, StoreObject, Direction} from "./glider/glider"
 import "./login.css"
 import loginView from './login.ghtml'
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -20,3 +31,29 @@ export class Login extends GHTMLControl {
     }
 
 }
+
+
+
+
+
+let loginData = [
+	{name:"uname", type:"string", target:"uname", flow: Direction.both} as StoreObject,
+	{name:"password", type:"string", target:"uname", flow: Direction.both} as StoreObject,
+]
+
+
+
+
+class LoginData extends GDataObject {
+	
+	constructor() {
+		super(loginData)
+	}
+
+
+}
+
+
+
+
+

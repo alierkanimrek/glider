@@ -13,13 +13,13 @@ approot
             form
               div class=field
                 div class=control
-                  input class=input is-large type=email placeholder=Your Email
+                  input  id=uname class=input is-large type=email placeholder=Your Email
               div class=field
                 div class=control
-                  input class=input is-large type=password placeholder=Your Password
+                  input id=passw class=input is-large type=password placeholder=Your Password
               div class=field
                 label class=checkbox
-                  input type=checkbox 
+                  input id=remember type=checkbox 
                   span 
                   ^  Remember me
               button class=button is-block is-info is-large is-fullwidth 
