@@ -61,17 +61,18 @@ export interface Route extends Array<RouteObj> { }
 
 
 export enum Direction {
-    toUi,
     toStore,
+    toUi,
     both
 }
 
 
-export interface StoreObject {
-    name:string,
-    type:any,
-    target:string,
-    flow: Direction
+export interface BindingObject {
+    id:string,
+    data:string,
+    dataProp?: string,
+    type?:any,
+    flow?: Direction
 }
 
 
@@ -347,7 +348,7 @@ export class GHTMLControl {
     private gDoc:GDoc
     public  id:string
     public  e:HTMLElementCollection
-    private storeName : string = ""
+    private storeNames : string[]
     
 
 
@@ -373,6 +374,7 @@ export class GHTMLControl {
 
 
 
+
     public navigate():void{
         /*
         This only triggers from GDocument navigation event
@@ -385,13 +387,70 @@ export class GHTMLControl {
 
 
 
-    protected store(storeName:string):void{
+    protected store(storeNames:string[], bindto?:string):void{
         /*
         Connect control and data store
         */
-        this.storeName = storeName
-        this.gDoc.bindStore(this, this.storeName)
+        this.storeNames = storeNames
+        this.gDoc.bindStore(this, this.storeNames)
+
+        //Auto bind one-way flow 
+        if(bindto){
+            let targetDataObj = this.gDoc.gData(bindto)
+            let targetProps = Object.keys(targetDataObj)
+            let sourceList = Object.keys(this.e)
+            sourceList.forEach((id:string) => {
+                let name = this.splitBindName(id)
+                if(name[1]){
+                    let b:BindingObject = { 
+                        id : id,
+                        data : bindto,
+                        dataProp: name[0],
+                        flow: Number(name[1])
+                    }
+                    this.bind(b)
+                }
+            })
+        }
     }
+
+
+    private splitBindName(id:string):string[]{
+        let result = [id.substring(0,id.lastIndexOf("-")),
+            id.substr(id.lastIndexOf("-")+1)]
+        //Seperator or bind property not found
+        if(
+            id.lastIndexOf("-") < 0 || 
+            result[1].indexOf("bind") !== 0 || 
+            result[1].length !== 5){
+            
+            result = [id, ""]
+        }
+        else{
+            result[1] = result[1][4]
+            // Enum Direction check
+            if(Number(result[1])>2){
+                 result = [id, ""]       
+            }
+        }
+        return(result)
+    }
+
+
+
+    protected bind(binding:BindingObject):void{
+        /*
+        */
+        //Default values
+        let { id="", data="", dataProp="", type="", flow=Direction.toStore } = binding
+
+        let element = this.e[id]
+        let dataObj = this.gDoc.gData(data)
+                    
+    }
+
+
+    
 
 }
 
@@ -443,16 +502,24 @@ class GDoc{
     }
 
 
+    public gData(name:string) : GDataObject|null {
+        if(Object.keys(this.store).toString().search(name) > -1){
+            return(this.store[name])
+        }
+    }
 
-    public bindStore(control:GHTMLControl, sname:string):boolean{
+
+    public bindStore(control:GHTMLControl, storeNames:string[]):void{
         /*
         */
-        if(Object.keys(this.store).toString().search(sname) > -1){
-            this.store[sname].bind(control)
-            //control.bind(this.store[sname])
-        }
-        else{    return(false)    }
-        return(true)
+        storeNames.forEach( 
+            ( sname : string ) =>{
+                if(Object.keys(this.store).toString().search(sname) > -1){
+                    this.store[sname].bind(control)
+                    //control.bind(this.store[sname])
+                }
+                else{    console.log("Store name '"+sname+"'' not found")    }
+            })
     }
 
 
@@ -583,16 +650,20 @@ class GDataControl{
 export class GDataObject extends GDataControl {
     
 
-    private control:GHTMLControl
+    private controls:GHTMLControl[]=[]
 
     constructor() {
         super()
+
     }
 
 
     public bind(control:GHTMLControl):void{
-        this.control = control
+        this.controls.push(control)
+        //console.log(this.controls)
     }
+
+
 
 
 }
