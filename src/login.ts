@@ -16,24 +16,38 @@ import loginView from './login.ghtml'
 
 
 export class Login extends GHTMLControl {
+
+
     
     constructor() {
-        super(loginView)
-        this.store(["login"], "login")
+        super({view:loginView, bindTo:"login"})
+        //this.store(["login"], "login")
 
-
-        //this.e["uname"].addEventListener("change", this.change.bind(this))
+        this.e["submit"].addEventListener("click", this.submit.bind(this))
         //this.e["passw"].addEventListener("change", this.change.bind(this))
 
     }
 
-    change(e:Event){
-        console.log(e)
+    submit(e:Event){
+        console.log(this.bindingStore)
         //window.location.hash = "/test"
     }
 
     run():void{
+        this.e["server"].addGs(`option innerText=test`)
+        this.e["server"].addGs(`option innerText=main`)
+        //console.log(this.e["server"])
 
+        //Object.defineProperty(this.e["uname"], "value", {value:"ali"})
+        let a = `
+selectArea
+  select id=server name=server
+    option
+    ^ Ali
+    option
+    ^ Veli
+          `
+        console.log(a)
     }
 
 }
@@ -54,6 +68,8 @@ export class LoginData extends GDataObject {
 	
     uname : string = ""
     passw : string = ""
+    server : string = ""
+    remember : boolean = true
 
 
     constructor() {

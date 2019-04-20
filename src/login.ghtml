@@ -13,16 +13,18 @@ approot
             form
               div class=field
                 div class=control
-                  input  id=uname-bind0 class=input is-large type=email placeholder=Your Email
+                  input id=uname name=uname class=input is-large type=email placeholder=Your Email
               div class=field
                 div class=control
-                  input id=passw-bind0 class=input is-large type=password placeholder=Your Password
+                  input id=passw name=passw class=input is-large type=password placeholder=Your Password
+              div class=select id=selectArea
+                select id=server name=server
               div class=field
                 label class=checkbox
-                  input id=remember type=checkbox 
+                  input id=remember name=remember type=checkbox 
                   span 
                   ^  Remember me
-              button class=button is-block is-info is-large is-fullwidth 
+              button id=submit class=button is-block is-info is-large is-fullwidth 
               ^ Login
           p class=has-text-grey
             a  id=signup

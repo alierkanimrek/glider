@@ -43,6 +43,7 @@ export class GHTMLElement extends HTMLElement{
 
     add(tag:string, options?:DomProperties | null):GHTMLElement{ return(this) }
     addGs(gs:string):GHTMLElement{ return(this) }
+    control:GHTMLControl
 }
 
 
@@ -124,11 +125,14 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
 
 
 
-function addGs(a:string):GHTMLElement {
+function addGs(gString:string):GHTMLElement {
     /*
     Create element from gString
     */
-    return(createGHTMLElement(a, this.control, this))
+    return(createGHTMLElement({
+        gStringLine: gString,
+        root: this,
+        control : this.control}))
 }
 
 
@@ -188,33 +192,43 @@ function gHTMLStrIndent(a:string):string {
 }
 
 
+export interface createGHTMLElementProps {
+    gStringLine:string
+    root:GHTMLElement
+    control:GHTMLControl
+}
 
 
-function createGHTMLElement(a:string, r:GHTMLElement, c:GHTMLControl): GHTMLElement{
+
+function createGHTMLElement(prop:createGHTMLElementProps): GHTMLElement{
     /*
     Parse Tag and Properties from string
     and adds it to the r element 
     */
-    a = a.trim()
-    const i = a.indexOf(" ")
+
+    prop.gStringLine = prop.gStringLine.trim()
+    const i = prop.gStringLine.indexOf(" ")
     let t = ""    //Tag name
     let p = {}    //Properties
     if (i == -1) {    //No properties
-        t = a
+        t = prop.gStringLine
     } else {
-        t = a.slice(0,i)
-        p = prop2Obj(a.slice(i+1))
+        t = prop.gStringLine.slice(0,i)
+        p = prop2Obj(prop.gStringLine.slice(i+1))
         //***********FIX Error check***************
     }
 
     //Create element
-    let e = r.add(t,p)
+    let e = prop.root.add(t,p)
     //Add control link to Dom
-    Object.defineProperty(e,"control", {value:c})
-    if(e.id !== ""){
-        c.e[e.id] = e
+    Object.defineProperty(e,"control", {value:prop.control})
+    if(e.attributes.getNamedItem("id")){
+        prop.control.e[e.id] = e
     }
-
+    //Bind control to data source
+    if(e.attributes.getNamedItem("name")){
+        e.control.bind0(e)
+    }
     return(e)
 }
 
@@ -317,7 +331,10 @@ export function createGHTML(ghtmlstr:string, control:GHTMLControl, root?:string)
         }
         
         //Create Element and add parents level for next element
-        parents[l] = createGHTMLElement(lines[i], parents[l-1], control)
+        parents[l] = createGHTMLElement({
+            gStringLine : lines[i], 
+            root : parents[l-1], 
+            control : control})
     }
 
     return(parents[0])
@@ -334,7 +351,11 @@ function uuid():string {
 
 
 
-
+export interface GHTMLControlProps {
+    view:string 
+    root?:string
+    bindTo?:string
+}
 
 
 
@@ -344,31 +365,38 @@ export class GHTMLControl {
     View Control object
     */
 
-    protected rootElement:GHTMLElement
     private gDoc:GDoc
+    private storeNames : string[]
+
+    protected rootElement:GHTMLElement
+
     public  id:string
     public  e:HTMLElementCollection
-    private storeNames : string[]
+    public bindingStore: GDataObject
     
 
 
 
-    constructor(view:string, root?:string) {
-        
-        this.e = {}
+    constructor(prop:GHTMLControlProps) {
+
+        //Default values
+        let { view="", root="", bindTo="" } = prop
 
         //Generate UUID 
         this.id = uuid()
 
-
         //Link for global Glider object
         this.gDoc = GDocument
+        
+        this.e = {}
+        this.bindingStore = this.gDoc.gData(prop.bindTo)
+
 
         //Register itself to global object for custom events
         this.gDoc.register(this)
 
         //Create static view
-        this.rootElement = createGHTML(view, this, root)
+        this.rootElement = createGHTML(prop.view, this, prop.root)
 
     }
 
@@ -387,15 +415,27 @@ export class GHTMLControl {
 
 
 
-    protected store(storeNames:string[], bindto?:string):void{
+    public bind0(e:GHTMLElement):void{
         /*
         Connect control and data store
         */
-        this.storeNames = storeNames
-        this.gDoc.bindStore(this, this.storeNames)
+        //this.storeNames = storeNames
+        //this.gDoc.bindStore(this, this.storeNames)
+
+        let t = (e:any):HTMLInputElement => {return(e)}
+        let type = t(e).type
+        let nodeName = e.nodeName
+        let on = "input"
+
+        if(nodeName === "SELECT"){
+            on = "select"
+        }
+
+        e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))
+
 
         //Auto bind one-way flow 
-        if(bindto){
+        /*if(bindto){
             let targetDataObj = this.gDoc.gData(bindto)
             let targetProps = Object.keys(targetDataObj)
             let sourceList = Object.keys(this.e)
@@ -411,7 +451,7 @@ export class GHTMLControl {
                     this.bind(b)
                 }
             })
-        }
+        }*/
     }
 
 
@@ -435,22 +475,6 @@ export class GHTMLControl {
         }
         return(result)
     }
-
-
-
-    protected bind(binding:BindingObject):void{
-        /*
-        */
-        //Default values
-        let { id="", data="", dataProp="", type="", flow=Direction.toStore } = binding
-
-        let element = this.e[id]
-        let dataObj = this.gDoc.gData(data)
-                    
-    }
-
-
-    
 
 }
 
@@ -664,11 +688,24 @@ export class GDataObject extends GDataControl {
     }
 
 
+    public updateData(e:Event):void{
+        let target = <HTMLInputElement> e.target
+        let name:string = target.name
+        let value:any
+        let type:string = target.type
 
+        if(type == "checkbox" || type == "radio"){
+            value = target.checked
+        }
+        else{
+            value = target.value
+        }
+
+        Object.defineProperty(this, name, {value:value})
+        console.log(this)
+    }
 
 }
-
-
 
 
 
