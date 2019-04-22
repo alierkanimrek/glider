@@ -428,9 +428,8 @@ export class GHTMLControl {
         let on = "input"
 
         if(nodeName === "SELECT"){
-            on = "select"
+            on = "change"
         }
-
         e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))
 
 
