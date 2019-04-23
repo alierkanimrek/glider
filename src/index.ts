@@ -7,7 +7,7 @@ import {Login, LoginData} from "./login"
 function login():void{
     
     let login = new Login()
-    login.run()
+
 }
 
 

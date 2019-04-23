@@ -284,14 +284,25 @@ function prop2Obj(a:string):object{
 
 
 
-export function createGHTML(ghtmlstr:string, control:GHTMLControl, root?:string):null|GHTMLElement{
+export function createGHTML(ghtmlstr:string|Array<string>, control:GHTMLControl, root?:string):null|GHTMLElement{
     /*
     Create GHTML Elements from GHTML String
     The first string of ghtml must be root element id
     root option is override value of root element
     */
-    //Split lines
-    let lines = ghtmlstr.split(/\r?\n/)
+
+    let lines:Array<string>
+
+    //Check string or array
+    if(typeof ghtmlstr == "string"){
+        
+        //Split lines
+        lines = ghtmlstr.split(/\r?\n/)
+    }
+    else{
+
+        lines = ghtmlstr
+    }
 
     //Find root line number
     const rootLine = gHTMLStrRootIndex(lines)
@@ -367,6 +378,7 @@ export class GHTMLControl {
 
     private gDoc:GDoc
     private storeNames : string[]
+    private t = (e:any):HTMLInputElement => {return(e)}
 
     protected rootElement:GHTMLElement
 
@@ -374,6 +386,7 @@ export class GHTMLControl {
     public  e:HTMLElementCollection
     public bindingStore: GDataObject
     
+
 
 
 
@@ -398,8 +411,15 @@ export class GHTMLControl {
         //Create static view
         this.rootElement = createGHTML(prop.view, this, prop.root)
 
+        this.up()
+
     }
 
+
+
+    protected createGHTML(ghtml:string|Array<string>):void{
+        createGHTML(ghtml,this)
+    }
 
 
 
@@ -419,11 +439,8 @@ export class GHTMLControl {
         /*
         Connect control and data store
         */
-        //this.storeNames = storeNames
-        //this.gDoc.bindStore(this, this.storeNames)
 
-        let t = (e:any):HTMLInputElement => {return(e)}
-        let type = t(e).type
+        let type = this.t(e).type
         let nodeName = e.nodeName
         let on = "input"
 
@@ -432,28 +449,39 @@ export class GHTMLControl {
         }
         e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))
 
-
-        //Auto bind one-way flow 
-        /*if(bindto){
-            let targetDataObj = this.gDoc.gData(bindto)
-            let targetProps = Object.keys(targetDataObj)
-            let sourceList = Object.keys(this.e)
-            sourceList.forEach((id:string) => {
-                let name = this.splitBindName(id)
-                if(name[1]){
-                    let b:BindingObject = { 
-                        id : id,
-                        data : bindto,
-                        dataProp: name[0],
-                        flow: Number(name[1])
-                    }
-                    this.bind(b)
-                }
-            })
-        }*/
     }
 
 
+
+    protected up():void{
+
+        let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
+
+        // Every element
+        Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
+
+            let target = this.t(this.e[e])
+            let type = target.type
+            let value:any
+            
+            //Element's name is in binding store
+            if(bindingNames.indexOf(e) > -1){
+
+                value = eval("this.bindingStore."+e)
+
+                if(type == "checkbox" || type == "radio"){
+                    target = Object.assign(target, {checked:value})
+                }
+                else{
+                    target = Object.assign(target, {value:value})   
+                }
+
+            }
+        })
+    }
+
+
+    /*
     private splitBindName(id:string):string[]{
         let result = [id.substring(0,id.lastIndexOf("-")),
             id.substr(id.lastIndexOf("-")+1)]
@@ -474,9 +502,78 @@ export class GHTMLControl {
         }
         return(result)
     }
+    */
+
 
 }
 
+
+
+
+
+
+
+
+
+export interface GHTMLInputEvent{
+    element:GHTMLElement,
+    control:GHTMLControl, 
+    name:string, 
+    value:any,
+    type:string
+}
+
+
+
+class GDataControl{
+    /*
+    Server connection services
+    */
+}
+
+
+
+export class GDataObject extends GDataControl {
+    
+
+
+    constructor() {
+        super()
+    }
+
+
+
+    public updateData(e:Event):void{
+        let target = <HTMLInputElement> e.target
+        let targetGHTMLE = <GHTMLElement> e.target
+        let name:string = target.name
+        let value:any
+        let type:string = target.type
+
+        if(type == "checkbox" || type == "radio"){
+            value = target.checked
+        }
+        else{
+            value = target.value
+        }
+
+        Object.defineProperty(this, name, {value:value})
+
+        this.input({
+            element:targetGHTMLE,
+            control: targetGHTMLE.control, 
+            name:name, 
+            value:value,
+            type:type
+        })
+    }
+
+
+    //Override this method
+    protected input(e:GHTMLInputEvent):void{}
+
+
+}
 
 
 
@@ -529,20 +626,6 @@ class GDoc{
         if(Object.keys(this.store).toString().search(name) > -1){
             return(this.store[name])
         }
-    }
-
-
-    public bindStore(control:GHTMLControl, storeNames:string[]):void{
-        /*
-        */
-        storeNames.forEach( 
-            ( sname : string ) =>{
-                if(Object.keys(this.store).toString().search(sname) > -1){
-                    this.store[sname].bind(control)
-                    //control.bind(this.store[sname])
-                }
-                else{    console.log("Store name '"+sname+"'' not found")    }
-            })
     }
 
 
@@ -660,51 +743,6 @@ class GDoc{
     }
 }
 
-
-
-
-
-class GDataControl{
-    
-}
-
-
-
-export class GDataObject extends GDataControl {
-    
-
-    private controls:GHTMLControl[]=[]
-
-    constructor() {
-        super()
-
-    }
-
-
-    public bind(control:GHTMLControl):void{
-        this.controls.push(control)
-        //console.log(this.controls)
-    }
-
-
-    public updateData(e:Event):void{
-        let target = <HTMLInputElement> e.target
-        let name:string = target.name
-        let value:any
-        let type:string = target.type
-
-        if(type == "checkbox" || type == "radio"){
-            value = target.checked
-        }
-        else{
-            value = target.value
-        }
-
-        Object.defineProperty(this, name, {value:value})
-        console.log(this)
-    }
-
-}
 
 
 
