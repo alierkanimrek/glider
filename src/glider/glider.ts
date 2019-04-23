@@ -106,10 +106,8 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
         
             if ( i > -1) {
                 //is a property
-                eval("e."+key+" = val")
-                //Object.defineProperty(e,key,val)
-                //e.setAttribute(key, <string>val)
-                
+                let a = Object(e)
+                a[key] = val
         
             } else {
                 //is an attribute
@@ -467,7 +465,7 @@ export class GHTMLControl {
             //Element's name is in binding store
             if(bindingNames.indexOf(e) > -1){
 
-                value = eval("this.bindingStore."+e)
+                value = Object(this.bindingStore)[e]
 
                 if(type == "checkbox" || type == "radio"){
                     target = Object.assign(target, {checked:value})
