@@ -68,7 +68,18 @@ export class LoginData extends GDataObject {
 
 
 
+    uname_validation:object = {
+		required: true,
+		matches: {regex:"regex", equal:"abc"},
+		standard: "email",
+		length: {min:8, max:12},
+		items: {min:1, max:3},
+		range: {min:0, max:100}
+    }
 
+
+
+/*
     input(event:GHTMLInputEvent):void{
         console.log(event.name+" : "+String(event.value))
         console.log(this)
@@ -76,4 +87,11 @@ export class LoginData extends GDataObject {
         console.log(event.control)
     }
 
+    change(event:GHTMLInputEvent):void{
+        console.log(event.name+" : "+String(event.value))
+        console.log(this)
+        console.log(event.element)
+        console.log(event.control)
+    }
+*/
 }

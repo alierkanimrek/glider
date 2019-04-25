@@ -518,7 +518,19 @@ export interface GHTMLInputEvent{
     control:GHTMLControl, 
     name:string, 
     value:any,
-    type:string
+    type:string,
+    validate: boolean
+}
+
+
+//FIX objects
+export interface ValidationRules {
+        required: boolean,
+        matches: object,
+        standard: string,
+        length: object,
+        items: object,
+        range: object
 }
 
 
@@ -547,6 +559,7 @@ export class GDataObject extends GDataControl {
         let name:string = target.name
         let value:any
         let type:string = target.type
+        let validate:boolean = false
 
         if(type == "checkbox" || type == "radio"){
             value = target.checked
@@ -557,15 +570,32 @@ export class GDataObject extends GDataControl {
 
         Object.defineProperty(this, name, {value:value})
 
+        validate = this.validate(name)
+
         this.input({
             element:targetGHTMLE,
             control: targetGHTMLE.control, 
             name:name, 
             value:value,
-            type:type
+            type:type,
+            validate: true
         })
     }
 
+
+
+    private validate(name:string):boolean{
+        if(Object.getOwnPropertyNames(this).indexOf(name+"_validation") > -1){
+            let validation:ValidationRules = Object(this)[name+"_validation"]
+            let rules:Array<string> = Object.getOwnPropertyNames(validation)
+            let value:any = Object(this)[name]
+
+            rules.forEach((rule:string)=>{
+                console.log(Object(validation)[rule])
+            })
+        }
+        return(false)
+    }
 
     //Override this method
     protected input(e:GHTMLInputEvent):void{}
