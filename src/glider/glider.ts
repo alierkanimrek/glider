@@ -577,6 +577,24 @@ export interface ValidationRules {
 
 
 
+export interface ValFalMessages{
+    /*
+    It has same properties as HTMLInputElement.validity
+    But <any> property can use instead of others
+    */
+    badInput?: string,
+    ​customError?: string,
+    ​patternMismatch?: string,
+    ​rangeOverflow?: string,
+    ​rangeUnderflow?: string,
+    ​stepMismatch?: string,
+    ​tooLong?: string,
+    ​tooShort?: string,
+    ​typeMismatch?: string,
+    ​valueMissing?: string,
+    any?: string
+}
+
 
 
 class GDataControl{
@@ -598,13 +616,18 @@ export class GDataObject extends GDataControl {
 
 
     public updateData(e:Event):void{
+        /*
+        Update local variables form DOM
+        */
+
+        // Get variables
         let target = <HTMLInputElement> e.target
         let targetGHTMLE = <GHTMLElement> e.target
         let name:string = target.name
         let value:any
         let type:string = target.type
-        //let validate:boolean = false
 
+        //Check type of input
         if(type == "checkbox" || type == "radio"){
             value = target.checked
         }
@@ -612,14 +635,16 @@ export class GDataObject extends GDataControl {
             value = target.value
         }
 
+        // Set values
         Object.defineProperty(this, name, {value:value})
 
+        //Check validation status
         if(target.willValidate && !target.validity.valid){
-            console.log(target.validity)
+            //Invalidate, get special message if exist
+            this.useSpecialValFalMessages(target)
         }
 
-        //validate = this.validate(name)
-
+        //Call tracking method for user control
         this.input({
             element:targetGHTMLE,
             control: targetGHTMLE.control, 
@@ -629,6 +654,28 @@ export class GDataObject extends GDataControl {
         })
     }
 
+
+    private useSpecialValFalMessages(target:HTMLInputElement):void{
+        /*
+        Check variable as <var_name>__valFalMessages
+
+        */
+        if(Object.getOwnPropertyNames(this).indexOf(target.name+"_valFalMessages") > -1){
+            let valFalMessages:ValFalMessages = Object(this)[target.name+"_valFalMessages"]
+            Object.getOwnPropertyNames(valFalMessages).forEach((v:string)=>{
+                //Check validation status of special message as same name 
+                if(Object(target.validity)[v]){
+                    //then set the message
+                    target.setCustomValidity(Object(valFalMessages)[v])
+                    return
+                }
+            })
+            //Not match
+            if(valFalMessages.any){
+                target.setCustomValidity(valFalMessages.any)
+            }
+        }
+    }
 
     /*
     private validate(name:string):boolean{

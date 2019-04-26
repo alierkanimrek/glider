@@ -1,4 +1,4 @@
-import {GHTMLControl, GDataObject, GHTMLInputEvent} from "./glider/glider"
+import {GHTMLControl, GDataObject, GHTMLInputEvent, ValFalMessages} from "./glider/glider"
 import "./login.css"
 import loginView from './login.ghtml'
 
@@ -65,6 +65,12 @@ export class LoginData extends GDataObject {
     server : string = "Test2"
     remember : boolean = true
     servers : Array<string> = ["Test1", "Test2", "Test3"]
+
+
+    uname_valFalMessages:ValFalMessages = {
+        valueMissing:"Bu olmadı"
+    }
+
 
 
     /*
