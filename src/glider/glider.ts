@@ -518,20 +518,64 @@ export interface GHTMLInputEvent{
     control:GHTMLControl, 
     name:string, 
     value:any,
-    type:string,
-    validate: boolean
+    type:string
 }
 
 
-//FIX objects
+/*
+interface RequireValidationRule{
+    required: boolean,
+    message?: string
+}
+
+
+interface MatchesValidationRule{
+    regex?: string,
+    equal?: string,
+    message?: string
+}
+
+interface StandardValidationRule{
+    standard: string,
+    message?: string
+}
+
+interface LengthValidationRule{
+    min?: number,
+    max?: number,
+    message?: string
+}
+
+
+interface ItemsValidationRule{
+    min?: number,
+    max?: number,
+    message?: string
+}
+
+interface RangeValidationRule{
+    min: number,
+    max: number,
+    message?: string
+}
+
+interface SpecialValidation{
+    (source: object, value: any): boolean
+}
+
+
 export interface ValidationRules {
-        required: boolean,
-        matches: object,
-        standard: string,
-        length: object,
-        items: object,
-        range: object
+        required?: RequireValidationRule,
+        matches?: MatchesValidationRule,
+        standard?: StandardValidationRule,
+        length?: LengthValidationRule,
+        items?: ItemsValidationRule,
+        range?: RangeValidationRule,
+        special?:SpecialValidation
 }
+*/
+
+
 
 
 
@@ -559,7 +603,7 @@ export class GDataObject extends GDataControl {
         let name:string = target.name
         let value:any
         let type:string = target.type
-        let validate:boolean = false
+        //let validate:boolean = false
 
         if(type == "checkbox" || type == "radio"){
             value = target.checked
@@ -570,32 +614,69 @@ export class GDataObject extends GDataControl {
 
         Object.defineProperty(this, name, {value:value})
 
-        validate = this.validate(name)
+        if(target.willValidate && !target.validity.valid){
+            console.log(target.validity)
+        }
+
+        //validate = this.validate(name)
 
         this.input({
             element:targetGHTMLE,
             control: targetGHTMLE.control, 
             name:name, 
             value:value,
-            type:type,
-            validate: true
+            type:type
         })
     }
 
 
-
+    /*
     private validate(name:string):boolean{
+
+        let result:boolean = false
+
         if(Object.getOwnPropertyNames(this).indexOf(name+"_validation") > -1){
             let validation:ValidationRules = Object(this)[name+"_validation"]
             let rules:Array<string> = Object.getOwnPropertyNames(validation)
             let value:any = Object(this)[name]
 
             rules.forEach((rule:string)=>{
-                console.log(Object(validation)[rule])
+                
+                let message:string
+                
+                switch (rule) {
+                    case "required":
+                        let ruleObj = <RequireValidationRule>Object(validation)[rule]
+                        if(ruleObj.required && value !== ""){ result = true }
+                        if(!result && ruleObj.message){ message = ruleObj.message }
+                        break;
+                    case "matches":
+                        // code...
+                        break;
+                    case "standard":
+                        // code...
+                        break;
+                    case "length":
+                        // code...
+                        break;
+                    case "items":
+                        // code...
+                        break;
+                    case "range":
+                        // code...
+                        break;
+                    default:
+                        console.log("Unknown validation rule, "+rule )
+                        break;
+                }
+                if(!result && message){
+                    console.log(message)
+                }
             })
         }
-        return(false)
-    }
+        return(result)
+    }*/
+
 
     //Override this method
     protected input(e:GHTMLInputEvent):void{}

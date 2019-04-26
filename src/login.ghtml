@@ -13,7 +13,7 @@ approot
             form
               div class=field
                 div class=control
-                  input id=uname name=uname class=input is-large type=email placeholder=Your Email
+                  input id=uname name=uname class=input is-large type=email required=true placeholder=Your Email
               div class=field
                 div class=control
                   input id=passw name=passw class=input is-large type=password placeholder=Your Password

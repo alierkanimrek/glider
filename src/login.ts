@@ -67,19 +67,19 @@ export class LoginData extends GDataObject {
     servers : Array<string> = ["Test1", "Test2", "Test3"]
 
 
+    /*
+    uname_validation:ValidationRules = {
+		required: {required:true, message:"Required"},
+		matches: {regex:"regex", equal:"abc", message:"not valid"},
+		standard: {standard: "email", message:"not standard"},
+		length: {min:8, max:12, message:"min:8 max: 12 char"},
+		items: {min:1, max:3, message:"min:1, max:3 items"},
+		range: {min:0, max:100, message:"Allowed range is 0-100 "}
+    }*/
 
-    uname_validation:object = {
-		required: true,
-		matches: {regex:"regex", equal:"abc"},
-		standard: "email",
-		length: {min:8, max:12},
-		items: {min:1, max:3},
-		range: {min:0, max:100}
-    }
 
 
 
-/*
     input(event:GHTMLInputEvent):void{
         console.log(event.name+" : "+String(event.value))
         console.log(this)
@@ -93,5 +93,5 @@ export class LoginData extends GDataObject {
         console.log(event.element)
         console.log(event.control)
     }
-*/
+
 }
