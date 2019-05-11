@@ -782,6 +782,9 @@ class GDoc{
         if(Object.keys(this.store).toString().search(name) > -1){
             return(this.store[name])
         }
+        else{
+            console.log(`Data binding not fond. "${name}"`)
+        }
     }
 
 
