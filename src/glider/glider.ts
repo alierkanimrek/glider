@@ -222,6 +222,7 @@ function createGHTMLElement(prop:createGHTMLElementProps): GHTMLElement{
     Object.defineProperty(e,"control", {value:prop.control})
     if(e.attributes.getNamedItem("id")){
         prop.control.e[e.id] = e
+        Object.defineProperty(prop.control, e.id, {value:e})
     }
     //Bind control to data source
     if(e.attributes.getNamedItem("name")){
@@ -752,6 +753,9 @@ class GDoc{
     //Routing Manager
     private routes:Route
 
+    //App Ready control function
+    private readyChecker:Function
+
     private basePath: string
     private fileProtocol:boolean
 
@@ -770,6 +774,8 @@ class GDoc{
         if(location.protocol=="file:"){
             this.fileProtocol = true
         }
+
+        this.readyChecker = () =>{return(true)}
     }
 
 
@@ -876,6 +882,10 @@ class GDoc{
     }
 
 
+    public setReadyChecker(f:Function):void{
+        this.readyChecker = f
+    }
+
 
 
     private run():void{
@@ -890,7 +900,7 @@ class GDoc{
         }
 
         // Check DOM is ready
-        if(document.readyState == "complete"){
+        if(document.readyState == "complete" && this.readyChecker()){
             console.log("Runnig the application...")
             entry()
         }
