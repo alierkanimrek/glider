@@ -156,7 +156,7 @@ export function gRoot(n : string):null|GHTMLElement {
     let root = document.getElementById(n)
 
     if (root == null) { 
-        console.log("Root element not found")
+        console.log("[Glider] Root element not found")
         return
     } else {
         return(injectGHTMLElement(root))
@@ -224,6 +224,14 @@ function createGHTMLElement(prop:createGHTMLElementProps): GHTMLElement{
         prop.control.e[e.id] = e
         Object.defineProperty(prop.control, e.id, {value:e})
     }
+    if(e.attributes.getNamedItem("gid")){
+        let gid = e.attributes.getNamedItem("gid").value
+        prop.control.e[gid] = e
+        Object.defineProperty(prop.control, gid, {value:e})
+        if(!e.attributes.getNamedItem("id")){
+            e.id = uuid()
+        }
+    }    
     //Bind control to data source
     if(e.attributes.getNamedItem("name")){
         e.control.bind0(e)
@@ -375,7 +383,7 @@ export class GHTMLControl {
     View Control object
     */
 
-    private gDoc:GDoc
+    protected gDoc:GDoc
     private storeNames : string[]
     private t = (e:any):HTMLInputElement => {return(e)}
 
@@ -416,8 +424,9 @@ export class GHTMLControl {
 
 
 
-    protected createGHTML(ghtml:string|Array<string>):void{
-        createGHTML(ghtml,this)
+    protected createGHTML(ghtml:string|Array<string>, root?:HTMLElement):void{
+        if(root){    createGHTML(ghtml, this, root.id)    }
+        else{    createGHTML(ghtml,this)    }
     }
 
 
@@ -453,6 +462,9 @@ export class GHTMLControl {
 
 
     protected up():void{
+        /*
+        Update DOM values from bindingStore
+        */
 
         let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
 
@@ -460,23 +472,65 @@ export class GHTMLControl {
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
 
             let target = this.t(this.e[e])
-            let type = target.type
             let value:any
-            
+
             //Element's name is in binding store
-            if(bindingNames.indexOf(e) > -1){
+            if(bindingNames.indexOf(target.name) > -1){
 
-                value = Object(this.bindingStore)[e]
-
-                if(type == "checkbox" || type == "radio"){
-                    target = Object.assign(target, {checked:value})
-                }
-                else{
-                    target = Object.assign(target, {value:value})   
-                }
-
+                value = Object(this.bindingStore)[target.name]
+                this.updateDOM(target, value)
             }
         })
+    }
+
+
+
+
+    protected bindingSet(varname:string, value:any):void{
+        /*
+        Update bindingStore value and related DOM
+        */
+
+        //Check varname is exist in store
+        if(Object.getOwnPropertyNames(this.bindingStore).indexOf(varname) > -1){
+
+            //Search DOM element
+            Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
+
+                let target = this.t(this.e[e])
+                //for same name property with binding varname
+                if(target.name == varname){
+                    let store = <any>this.bindingStore
+
+                    // Update store
+                    store[varname] = value
+
+                    //Update DOM
+                    this.updateDOM(target, value)
+                }
+            })
+        }
+        else{
+            console.log("[Glider] Store variable not found: "+varname)
+        }
+    }
+
+
+
+
+    protected updateDOM(target:any, value:any):void{
+        try{
+            let type = target.type
+            if(type == "checkbox" || type == "radio"){
+                target = Object.assign(target, {checked:value})
+            }
+            else{
+                target = Object.assign(target, {value:value})   
+            }
+        }
+        catch{
+            console.log("[Glider] DOM not updated : "+target.toString())
+        }
     }
 
 
@@ -762,7 +816,7 @@ class GDoc{
 
 
     constructor() {
-        console.log("Glider initializing...")
+        console.log("[Glider] Initializing...")
 
         //Watch navigation 
         window.addEventListener("popstate", this.navigate.bind(this))
@@ -784,7 +838,7 @@ class GDoc{
     }
 
 
-    public gData(name:string) : GDataObject|null {
+    public gData(name:string) : GDataObject|any {
         if(Object.keys(this.store).toString().search(name) > -1){
             return(this.store[name])
         }
@@ -895,13 +949,13 @@ class GDoc{
 
         // May be not fonud
         if(!entry){
-            console.log("Url not macth any route")
+            console.log("[Glider] Url not macth any route")
             return
         }
 
         // Check DOM is ready
         if(document.readyState == "complete" && this.readyChecker()){
-            console.log("Runnig the application...")
+            console.log("[Glider] Runnig the application...")
             entry()
         }
 
