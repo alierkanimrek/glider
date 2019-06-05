@@ -392,7 +392,7 @@ export class GHTMLControl {
     public  id:string
     public  e:HTMLElementCollection
     public bindingStore: GDataObject
-    
+
 
 
 
@@ -421,6 +421,34 @@ export class GHTMLControl {
         this.up()
 
     }
+
+
+
+
+    protected store(name:string):GDataObject|any{
+        return(this.gDoc.gData(name))
+    }
+
+
+
+
+    protected linkEvents(eventmap:Array<Array <any>>):void{
+        /*
+        Create DOM event listener from an Array
+            emap: any = [
+                [this.baseMenuItem, "click", this.toggleMenu]
+            ]
+        */
+        eventmap.forEach((map:Array<any>) => {
+            try{
+                map[0].addEventListener(map[1], map[2].bind(this))
+            }
+            catch{
+                console.log("[Glider] Event not linked :"+String(map))
+            }
+        })
+    }
+
 
 
 
