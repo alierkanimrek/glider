@@ -156,7 +156,7 @@ export function gRoot(n : string):null|GHTMLElement {
     let root = document.getElementById(n)
 
     if (root == null) { 
-        console.log("[Glider] Root element not found")
+        console.log("[Glider] Root element not found : " +n)
         return
     } else {
         return(injectGHTMLElement(root))
@@ -493,7 +493,7 @@ export class GHTMLControl {
         /*
         Update DOM values from bindingStore
         */
-
+        if(!this.bindingStore){    return    }
         let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
 
         // Every element
