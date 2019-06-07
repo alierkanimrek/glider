@@ -378,6 +378,14 @@ export interface GHTMLControlProps {
 
 
 
+interface GHTMLControlEvent {
+    type:string,
+    callback:Function
+}
+
+
+
+
 export class GHTMLControl {
     /*
     View Control object
@@ -392,6 +400,8 @@ export class GHTMLControl {
     public  id:string
     public  e:HTMLElementCollection
     public bindingStore: GDataObject
+
+    protected events: Array<GHTMLControlEvent> = []
 
 
 
@@ -422,6 +432,24 @@ export class GHTMLControl {
 
     }
 
+
+
+
+    addEventListener(type: string, listener: Function):void{
+        this.events.push({type:type, callback:listener})
+    }
+
+
+
+
+    dispatchEvent(type:string, arg?:any):void{
+        this.events.forEach((evt:GHTMLControlEvent)=>{
+            if(type == evt.type){
+                if(arg){    evt.callback(arg)    }
+                else{    evt.callback()    }
+            }
+        })
+    }
 
 
 
