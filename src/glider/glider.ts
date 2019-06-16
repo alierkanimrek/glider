@@ -435,14 +435,14 @@ export class GHTMLControl {
 
 
 
-    addEventListener(type: string, listener: Function):void{
+    public addEventListener(type: string, listener: Function):void{
         this.events.push({type:type, callback:listener})
     }
 
 
 
 
-    dispatchEvent(type:string, arg?:any):void{
+    protected dispatchEvent(type:string, arg?:any):void{
         this.events.forEach((evt:GHTMLControlEvent)=>{
             if(type == evt.type){
                 if(arg){    evt.callback(arg)    }
@@ -487,7 +487,7 @@ export class GHTMLControl {
 
 
 
-    public navigate():void{
+    public clear():void{
         /*
         This only triggers from GDocument navigation event
         Clears for all childs and unregister from GDocument
@@ -875,7 +875,7 @@ class GDoc{
         console.log("[Glider] Initializing...")
 
         //Watch navigation 
-        window.addEventListener("popstate", this.navigate.bind(this))
+        window.addEventListener("popstate", this.popstate.bind(this))
 
         this.controls = []
         this.basePath = ""
@@ -889,9 +889,13 @@ class GDoc{
     }
 
 
+
+
     public stores(store:Store):void{
         this.store = store
     }
+
+
 
 
     public gData(name:string) : GDataObject|any {
@@ -905,15 +909,26 @@ class GDoc{
 
 
 
-    private navigate(e:Event){
+
+    private popstate(e:Event):void{
+        this.navigate()
+    }
+
+
+
+
+    public navigate(uri?:string):void{
         /*
         Navigation event handler
         */
         this.controls.forEach((c: GHTMLControl) => {
-            try{    c.navigate()    }
+            try{    c.clear()    }
             catch{}
         })
         this.controls = []
+        if(uri){
+            window.history.pushState('signup', 'Title', uri)
+        }
         this.run()
     }
 
@@ -970,7 +985,6 @@ class GDoc{
             path = location.pathname.replace(this.basePath, "")
         }
 
-
         //Find entry function according to routes
         for (let i = 0; i < this.routes.length; i++) {
             let p = Object.keys(this.routes[i])[0]
@@ -981,11 +995,17 @@ class GDoc{
                 entry = f
                 break
             }
+        }
+        if(!entry){
+            for (let i = 0; i < this.routes.length; i++) {
+                let p = Object.keys(this.routes[i])[0]
+                let f = this.routes[i][p]
 
-            //Check RegExp matching if it is not empty 
-            if(RegExp(p).test(path) && p !== ""){
-                entry = f
-                break
+                //Check RegExp matching if it is not empty 
+                if(RegExp(p).test(path) && p !== ""){
+                    entry = f
+                    break
+                }
             }
         }
         return(entry)
