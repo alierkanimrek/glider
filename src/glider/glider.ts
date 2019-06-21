@@ -156,7 +156,7 @@ export function gRoot(n : string):null|GHTMLElement {
     let root = document.getElementById(n)
 
     if (root == null) { 
-        console.log("[Glider] Root element not found : " +n)
+        console.error("[Glider] Root element not found : " +n)
         return
     } else {
         return(injectGHTMLElement(root))
@@ -472,7 +472,7 @@ export class GHTMLControl {
                 map[0].addEventListener(map[1], map[2].bind(this))
             }
             catch{
-                console.log("[Glider] Event not linked :"+String(map))
+                console.error("[Glider] Event not linked :"+String(map))
             }
         })
     }
@@ -567,7 +567,7 @@ export class GHTMLControl {
             })
         }
         else{
-            console.log("[Glider] Store variable not found: "+varname)
+            console.error("[Glider] Store variable not found: "+varname)
         }
     }
 
@@ -585,7 +585,7 @@ export class GHTMLControl {
             }
         }
         catch{
-            console.log("[Glider] DOM not updated : "+target.toString())
+            console.error("[Glider] DOM not updated : "+target.toString())
         }
     }
 
@@ -872,7 +872,7 @@ class GDoc{
 
 
     constructor() {
-        console.log("[Glider] Initializing...")
+        console.info("[Glider] Initializing...")
 
         //Watch navigation 
         window.addEventListener("popstate", this.popstate.bind(this))
@@ -903,7 +903,7 @@ class GDoc{
             return(this.store[name])
         }
         else{
-            console.log(`Data binding not fond. "${name}"`)
+            console.error(`[Glider] Data binding not fond. "${name}"`)
         }
     }
 
@@ -1025,13 +1025,13 @@ class GDoc{
 
         // May be not fonud
         if(!entry){
-            console.log("[Glider] Url not macth any route")
+            console.error("[Glider] Url not macth any route")
             return
         }
 
         // Check DOM is ready
         if(document.readyState == "complete" && this.readyChecker()){
-            console.log("[Glider] Runnig the application...")
+            console.info("[Glider] Runnig the application : "+entry.name)
             entry()
         }
 
