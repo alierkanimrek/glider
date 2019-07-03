@@ -84,6 +84,20 @@ interface Store {
 
 
 
+export interface GHTMLInputEvent{
+    element:GHTMLElement,
+    control:GHTMLControl, 
+    name:string, 
+    value:any,
+    type:string
+}
+
+
+
+
+
+
+
 
 function add(tag:string, options?:DomProperties):GHTMLElement{
     /*
@@ -218,10 +232,14 @@ function createGHTMLElement(prop:createGHTMLElementProps): GHTMLElement{
 
     //Create element
     let e = prop.root.add(t,p)
+    
     //Add control link to Dom
     Object.defineProperty(e,"control", {value:prop.control})
+
     if(e.attributes.getNamedItem("id")){
+        //Add element to <e> property of control
         prop.control.e[e.id] = e
+        //Add element as a property
         Object.defineProperty(prop.control, e.id, {value:e})
     }
     if(e.attributes.getNamedItem("gid")){
@@ -590,6 +608,14 @@ export class GHTMLControl {
     }
 
 
+
+
+    //Override this method
+    public input(e:GHTMLInputEvent):void{}
+    
+
+
+
     /*
     private splitBindName(id:string):string[]{
         let result = [id.substring(0,id.lastIndexOf("-")),
@@ -624,13 +650,6 @@ export class GHTMLControl {
 
 
 
-export interface GHTMLInputEvent{
-    element:GHTMLElement,
-    control:GHTMLControl, 
-    name:string, 
-    value:any,
-    type:string
-}
 
 
 /*
@@ -720,6 +739,12 @@ export class GDataObject extends GDataControl {
     
 
 
+
+    inputInterval:number = 0
+
+
+
+
     constructor() {
         super()
     }
@@ -755,15 +780,44 @@ export class GDataObject extends GDataControl {
             this.useSpecialValFalMessages(target)
         }
 
-        //Call tracking method for user control
-        this.input({
+        
+        let event:GHTMLInputEvent = {
             element:targetGHTMLE,
             control: targetGHTMLE.control, 
             name:name, 
             value:value,
             type:type
-        })
+        }
+
+        //Call tracking method for user control
+        if(type == "checkbox" || type == "radio"){
+            this.input(event)
+            event.control.input(event)
+        }
+        else{
+            setTimeout(
+                this.inputDelay.bind(this), 
+                this.inputInterval,
+                value,
+                target,
+                event)
+        }
     }
+
+
+
+
+    private inputDelay(actVal:string, input:HTMLInputElement, event:GHTMLInputEvent):void{
+        /*
+        Text input delay procedure
+        */
+        if(actVal == input.value){
+           this.input(event)
+           event.control.input(event)
+        }
+    }
+
+
 
 
     private useSpecialValFalMessages(target:HTMLInputElement):void{
@@ -921,13 +975,17 @@ class GDoc{
         /*
         Navigation event handler
         */
+        if(!uri){    let uri = ""    }
         this.controls.forEach((c: GHTMLControl) => {
             try{    c.clear()    }
             catch{}
         })
         this.controls = []
-        if(uri){
-            window.history.pushState('signup', 'Title', uri)
+        if(this.fileProtocol){
+            window.history.pushState('', '', '#'+uri)
+        }
+        else{
+            window.history.pushState('', '', uri)
         }
         this.run()
     }
