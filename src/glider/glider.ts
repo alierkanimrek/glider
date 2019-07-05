@@ -359,8 +359,8 @@ export function createGHTML(ghtmlstr:string|Array<string>, control:GHTMLControl,
         const h = gHTMLStrIndent(lines[i]).split(ind)
         const l = h.length-1
 
-        //Check ^ command for add innerHTML
-        if (lines[i].trim()[0] == "^") {
+        //Check | command for add innerHTML
+        if (lines[i].trim()[0] == "|") {
             let itxt = lines[i].slice(gHTMLStrIndent(lines[i]).length)
             parents[l].innerHTML = itxt.slice(1)
             continue
@@ -616,6 +616,28 @@ export class GHTMLControl {
 
 
 
+    public setValidationMessages(target:HTMLInputElement):void{
+        /*
+        Check variable as <var_name>_validationMessages
+
+        */
+        if(Object.getOwnPropertyNames(this).indexOf(target.name+"_validityMessages") > -1){
+            let valFalMessages:ValidityMessages = Object(this)[target.name+"_validityMessages"]
+            Object.getOwnPropertyNames(valFalMessages).forEach((v:string)=>{
+                //Check validation status of special message as same name 
+                if(Object(target.validity)[v]){
+                    //then set the message
+                    target.setCustomValidity(Object(valFalMessages)[v])
+                    return
+                }
+            })
+            //Not match
+            if(valFalMessages.any){
+                target.setCustomValidity(valFalMessages.any)
+            }
+        }
+    }
+
     /*
     private splitBindName(id:string):string[]{
         let result = [id.substring(0,id.lastIndexOf("-")),
@@ -707,7 +729,7 @@ export interface ValidationRules {
 
 
 
-export interface ValFalMessages{
+export interface ValidityMessages{
     /*
     It has same properties as HTMLInputElement.validity
     But <any> property can use instead of others
@@ -724,6 +746,20 @@ export interface ValFalMessages{
     ​valueMissing?: string,
     any?: string
 }
+
+
+
+export let ValidityNames:Array<string> = [
+    "badInput",
+    "customError",
+    "patternMismatch",
+    "rangeOverflow",
+    "rangeUnderflow",
+    "stepMismatch",
+    "tooLong",
+    "tooShort",
+    "typeMismatch",
+    "valueMissing"]
 
 
 
@@ -774,10 +810,12 @@ export class GDataObject extends GDataControl {
         // Set values
         Object.defineProperty(this, name, {value:value})
 
+        target.setCustomValidity("")
+
         //Check validation status
         if(target.willValidate && !target.validity.valid){
             //Invalidate, get special message if exist
-            this.useSpecialValFalMessages(target)
+            targetGHTMLE.control.setValidationMessages(target)
         }
 
         
@@ -820,27 +858,6 @@ export class GDataObject extends GDataControl {
 
 
 
-    private useSpecialValFalMessages(target:HTMLInputElement):void{
-        /*
-        Check variable as <var_name>__valFalMessages
-
-        */
-        if(Object.getOwnPropertyNames(this).indexOf(target.name+"_valFalMessages") > -1){
-            let valFalMessages:ValFalMessages = Object(this)[target.name+"_valFalMessages"]
-            Object.getOwnPropertyNames(valFalMessages).forEach((v:string)=>{
-                //Check validation status of special message as same name 
-                if(Object(target.validity)[v]){
-                    //then set the message
-                    target.setCustomValidity(Object(valFalMessages)[v])
-                    return
-                }
-            })
-            //Not match
-            if(valFalMessages.any){
-                target.setCustomValidity(valFalMessages.any)
-            }
-        }
-    }
 
     /*
     private validate(name:string):boolean{
