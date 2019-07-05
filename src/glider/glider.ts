@@ -104,7 +104,15 @@ function add(tag:string, options?:DomProperties):GHTMLElement{
     Creates an HTML element with options 
     and enhance it as Glider element
     */
-    let e = document.createElement(tag)
+    let e:HTMLElement
+
+    try{
+        e = document.createElement(tag)
+    }
+    catch{
+        e = document.createElement("div")   
+        console.error("[Glider] Tag error : "+tag+" "+String(options)) 
+    }
 
     if(options){
 
