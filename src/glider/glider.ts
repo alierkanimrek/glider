@@ -561,6 +561,14 @@ export class GHTMLControl {
 
                 value = Object(this.bindingStore)[target.name]
                 this.updateDOM(target, value)
+                
+                // Trigger input event
+                let eType = "input"
+                if(target.type == "SELECT"){
+                    eType = "change"
+                }
+                let e = new Event(eType, {'bubbles': true, 'cancelable': true})
+                target.dispatchEvent(e)
             }
         })
     }
