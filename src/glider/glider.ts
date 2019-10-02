@@ -54,7 +54,8 @@ export interface HTMLElementCollection {
 
 
 interface RouteObj {
-    [path:string]:Function
+    path: string,
+    app: Function
 }
 
 export interface Route extends Array<RouteObj> { }
@@ -461,6 +462,13 @@ export class GHTMLControl {
 
 
 
+    public get root():GHTMLElement{
+        return(this.rootElement)
+    }
+
+
+
+
     public addEventListener(type: string, listener: Function):void{
         this.events.push({type:type, callback:listener})
     }
@@ -816,7 +824,7 @@ export class GDataObject extends GDataControl {
         let type:string = target.type
 
         //Check type of input
-        if(type == "checkbox" || type == "radio"){
+        if(type == "checkbox" ){
             value = target.checked
         }
         else{
@@ -824,7 +832,7 @@ export class GDataObject extends GDataControl {
         }
 
         // Set values
-        Object.defineProperty(this, name, {value:value})
+        Object.defineProperty(this, name, {value:value, configurable: true})
 
         target.setCustomValidity("")
 
@@ -1053,6 +1061,7 @@ class GDoc{
 
 
 
+
     private getRoute():Function|null {
         /*
         Search route function
@@ -1076,36 +1085,37 @@ class GDoc{
             path = location.pathname.replace(this.basePath, "")
         }
 
+        let routePathArray:Array<string> = []
+        let routeAppArray:Array<Function> = []
+
         //Find entry function according to routes
-        for (let i = 0; i < this.routes.length; i++) {
-            let p = Object.keys(this.routes[i])[0]
-            let f = this.routes[i][p]
-
-            //Check full matching
-            if(p == path){
-                entry = f
-                break
+        this.routes.forEach( (route: RouteObj) =>{
+            routePathArray.push(route.path)
+            routeAppArray.push(route.app)
+            if(route.path == path){
+                entry = route.app
             }
-        }
-        if(!entry){
-            for (let i = 0; i < this.routes.length; i++) {
-                let p = Object.keys(this.routes[i])[0]
-                let f = this.routes[i][p]
+        })
 
-                //Check RegExp matching if it is not empty 
-                if(RegExp(p).test(path) && p !== ""){
-                    entry = f
-                    break
+        // Search path as regex
+        if(!entry){
+            for (let i = 0; i < routePathArray.length; i++) {
+                if(RegExp(routePathArray[i]).test(path)){
+                    entry = routeAppArray[i]
                 }
             }
         }
+        
         return(entry)
     }
+
+
 
 
     public setReadyChecker(f:Function):void{
         this.readyChecker = f
     }
+
 
 
 
