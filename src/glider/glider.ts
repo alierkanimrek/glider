@@ -963,6 +963,7 @@ class GDoc{
 
     private basePath: string
     private fileProtocol:boolean
+    private lastpath:string
 
 
 
@@ -1085,6 +1086,7 @@ class GDoc{
             path = location.pathname.replace(this.basePath, "")
         }
 
+        this.lastpath = path
         let routePathArray:Array<string> = []
         let routeAppArray:Array<Function> = []
 
@@ -1109,6 +1111,12 @@ class GDoc{
         return(entry)
     }
 
+
+
+
+    public get path() : string {
+        return(this.lastpath)
+    }
 
 
 
