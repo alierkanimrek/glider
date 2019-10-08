@@ -557,15 +557,15 @@ export class GHTMLControl {
         */
         if(!this.bindingStore){    return    }
         let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
-
+        
         // Every element
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
 
             let target = this.t(this.e[e])
             let value:any
-
+            
             //Element's name is in binding store
-            if(bindingNames.indexOf(target.name) > -1){
+            if(bindingNames.indexOf(target.name) > -1 ){
 
                 value = Object(this.bindingStore)[target.name]
                 this.updateDOM(target, value)
@@ -619,8 +619,13 @@ export class GHTMLControl {
     protected updateDOM(target:any, value:any):void{
         try{
             let type = target.type
-            if(type == "checkbox" || type == "radio"){
+            if(type == "checkbox"){
                 target = Object.assign(target, {checked:value})
+            }
+            if(type == "radio"){
+                if(target.value == value){
+                    target = Object.assign(target, {checked:true})
+                }
             }
             else{
                 target = Object.assign(target, {value:value})   
@@ -827,9 +832,16 @@ export class GDataObject extends GDataControl {
         if(type == "checkbox" ){
             value = target.checked
         }
+        if(type == "radio"){
+            if(target.checked){
+                value = target.value
+            }
+        }        
         else{
             value = target.value
         }
+        
+        if(!value){    return    }
 
         // Set values
         Object.defineProperty(this, name, {value:value, configurable: true})
