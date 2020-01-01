@@ -400,6 +400,7 @@ export interface GHTMLControlProps {
     view:string 
     root?:string
     bindTo?:string
+    bindToExternal?:GDataObject
 }
 
 
@@ -446,8 +447,11 @@ export class GHTMLControl {
         this.gDoc = GDocument
         
         this.e = {}
-        this.bindingStore = this.gDoc.gData(prop.bindTo)
-
+        if(prop.bindTo){
+            this.bindingStore = this.gDoc.gData(prop.bindTo)}
+        else{
+            if(prop.bindToExternal){
+                this.bindingStore = prop.bindToExternal}}
 
         //Register itself to global object for custom events
         this.gDoc.register(this)
@@ -529,8 +533,13 @@ export class GHTMLControl {
         while(this.rootElement.children[0]){
             this.rootElement.children[0].remove()
         }
+        this.onRemove()
     }
 
+
+
+
+    public onRemove():void{}
 
 
     public bind0(e:GHTMLElement):void{
@@ -542,12 +551,13 @@ export class GHTMLControl {
         let nodeName = e.nodeName
         let on = "input"
 
-        if(nodeName === "SELECT"){
+        if(nodeName === "SELECT" || type == "checkbox"){
             on = "change"
         }
-        e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))
-
+        if(this.bindingStore){
+            e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))}
     }
+
 
 
 
@@ -557,7 +567,7 @@ export class GHTMLControl {
         */
         if(!this.bindingStore){    return    }
         let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
-        
+
         // Every element
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
 
@@ -567,12 +577,18 @@ export class GHTMLControl {
             //Element's name is in binding store
             if(bindingNames.indexOf(target.name) > -1 ){
 
-                value = Object(this.bindingStore)[target.name]
+                /*if(target.type == "select-one"){
+                    if(bindingNames.indexOf(target.name+"_list") > -1){
+                        value = Object(this.bindingStore)[target.name+"_list"]}
+                }
+                else{*/
+                    value = Object(this.bindingStore)[target.name]
+                
                 this.updateDOM(target, value)
                 
                 // Trigger input event
                 let eType = "input"
-                if(target.type == "SELECT"){
+                if(target.type == "select-one"){
                     eType = "change"
                 }
                 let e = new Event(eType, {'bubbles': true, 'cancelable': true})
@@ -601,7 +617,20 @@ export class GHTMLControl {
                     let store = <any>this.bindingStore
 
                     // Update store
-                    store[varname] = value
+                    if(target.type == "checkbox"){
+                        store[varname] = target.checked
+                    }
+                    else if(target.type == "radio"){
+                        if(target.checked){
+                            store[varname] = target.value
+                        }
+                    }
+                    else if(target.type == "select-one"){
+                        store[varname] = target.value
+                    }
+                    else{
+                        store[varname] = value
+                    }
 
                     //Update DOM
                     this.updateDOM(target, value)
@@ -627,12 +656,25 @@ export class GHTMLControl {
                     target = Object.assign(target, {checked:true})
                 }
             }
+            if(type == "select-one"){
+                try{
+                    let value_list = Object(this.bindingStore)[target.name+"_list"]
+                    while (target.options.length > 0) {                
+                        target.remove(0)
+                    }
+                    let t = target as GHTMLElement
+                    value_list.forEach((val:string)=>{
+                        t.add("option", {"value": val}).textContent = val
+                    })
+                }catch{}
+                target = Object.assign(target, {value:value})
+            }
             else{
                 target = Object.assign(target, {value:value})   
             }
         }
         catch{
-            console.error("[Glider] DOM not updated : "+target.toString())
+            console.error("[Glider] DOM not updated : "+target)
         }
     }
 
@@ -667,28 +709,6 @@ export class GHTMLControl {
         }
     }
 
-    /*
-    private splitBindName(id:string):string[]{
-        let result = [id.substring(0,id.lastIndexOf("-")),
-            id.substr(id.lastIndexOf("-")+1)]
-        //Seperator or bind property not found
-        if(
-            id.lastIndexOf("-") < 0 || 
-            result[1].indexOf("bind") !== 0 || 
-            result[1].length !== 5){
-            
-            result = [id, ""]
-        }
-        else{
-            result[1] = result[1][4]
-            // Enum Direction check
-            if(Number(result[1])>2){
-                 result = [id, ""]       
-            }
-        }
-        return(result)
-    }
-    */
 
 
 }
@@ -703,58 +723,6 @@ export class GHTMLControl {
 
 
 
-/*
-interface RequireValidationRule{
-    required: boolean,
-    message?: string
-}
-
-
-interface MatchesValidationRule{
-    regex?: string,
-    equal?: string,
-    message?: string
-}
-
-interface StandardValidationRule{
-    standard: string,
-    message?: string
-}
-
-interface LengthValidationRule{
-    min?: number,
-    max?: number,
-    message?: string
-}
-
-
-interface ItemsValidationRule{
-    min?: number,
-    max?: number,
-    message?: string
-}
-
-interface RangeValidationRule{
-    min: number,
-    max: number,
-    message?: string
-}
-
-interface SpecialValidation{
-    (source: object, value: any): boolean
-}
-
-
-export interface ValidationRules {
-        required?: RequireValidationRule,
-        matches?: MatchesValidationRule,
-        standard?: StandardValidationRule,
-        length?: LengthValidationRule,
-        items?: ItemsValidationRule,
-        range?: RangeValidationRule,
-        special?:SpecialValidation
-}
-*/
 
 
 
@@ -827,24 +795,30 @@ export class GDataObject extends GDataControl {
         let name:string = target.name
         let value:any
         let type:string = target.type
-
+        let self = <any>this
+        
         //Check type of input
-        if(type == "checkbox" ){
+        if(target.type == "checkbox"){
             value = target.checked
         }
-        if(type == "radio"){
+        else if(target.type == "radio"){
             if(target.checked){
                 value = target.value
             }
-        }        
+        }
+        else if(target.type == "select-one"){
+            value = target.value
+        }
         else{
             value = target.value
         }
-        
-        if(!value){    return    }
+
+        //if(!value){    return    }
 
         // Set values
-        Object.defineProperty(this, name, {value:value, configurable: true})
+        if(name){
+            //Object.defineProperty(this, name, {value:value, configurable: true})}
+            self[name] = value}
 
         target.setCustomValidity("")
 
@@ -869,6 +843,7 @@ export class GDataObject extends GDataControl {
             event.control.input(event)
         }
         else{
+
             setTimeout(
                 this.inputDelay.bind(this), 
                 this.inputInterval,
@@ -894,53 +869,6 @@ export class GDataObject extends GDataControl {
 
 
 
-
-    /*
-    private validate(name:string):boolean{
-
-        let result:boolean = false
-
-        if(Object.getOwnPropertyNames(this).indexOf(name+"_validation") > -1){
-            let validation:ValidationRules = Object(this)[name+"_validation"]
-            let rules:Array<string> = Object.getOwnPropertyNames(validation)
-            let value:any = Object(this)[name]
-
-            rules.forEach((rule:string)=>{
-                
-                let message:string
-                
-                switch (rule) {
-                    case "required":
-                        let ruleObj = <RequireValidationRule>Object(validation)[rule]
-                        if(ruleObj.required && value !== ""){ result = true }
-                        if(!result && ruleObj.message){ message = ruleObj.message }
-                        break;
-                    case "matches":
-                        // code...
-                        break;
-                    case "standard":
-                        // code...
-                        break;
-                    case "length":
-                        // code...
-                        break;
-                    case "items":
-                        // code...
-                        break;
-                    case "range":
-                        // code...
-                        break;
-                    default:
-                        console.log("Unknown validation rule, "+rule )
-                        break;
-                }
-                if(!result && message){
-                    console.log(message)
-                }
-            })
-        }
-        return(result)
-    }*/
 
 
     //Override this method
@@ -1041,6 +969,7 @@ class GDoc{
         else{
             window.history.pushState('', '', uri)
         }
+
         this.run()
     }
 
@@ -1147,6 +1076,7 @@ class GDoc{
         // May be not fonud
         if(!entry){
             console.error("[Glider] Url not macth any route")
+            location.href = this.lastpath
             return
         }
 
