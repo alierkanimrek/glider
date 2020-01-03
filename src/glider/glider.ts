@@ -119,6 +119,8 @@ enum ThickInput{
 }
 
 
+
+
 function add(tag:string, options?:DomProperties):GHTMLElement{
     /*
     Creates an HTML element with options 
@@ -668,12 +670,26 @@ export class GHTMLControl {
         if(!triggerInput){    tInput = false    }
         if(name){            varNames.push(name)    }
         else if(names){      varNames = names    }
-        else{                varNames = Object.getOwnPropertyNames(this.bindingStore)        }
+        else if(this.bindingStore){
+            varNames = Object.getOwnPropertyNames(this.bindingStore)        }
         
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
+            
             //Every DOM element
             let target = <any>this.e[e]
-
+            let tag = target.tagName.toLowerCase()
+            let optionsVarName = target.name+"_options"
+            
+            //Update Select element options
+            if(tag == "select" && varNames.indexOf(optionsVarName) > -1){
+                let options = Object(this.bindingStore)[optionsVarName]
+                
+                while (target.options.length > 0) { target.remove(0) }
+                options.forEach((opt:string)=>{
+                    target.add("option", {"value": opt}).textContent = opt})
+                target.value = ""
+            }
+            
             if(target.name && varNames.indexOf(target.name) > -1){
                 // There is a property in Store as same name with DOM "name" value
                 this.setDOM(target, Object(this.bindingStore)[target.name])
@@ -696,7 +712,7 @@ export class GHTMLControl {
         /*
         Update DOM Element
         */        
-        let type = target.type
+        let type = target.type.toLowerCase()
         switch (type) {
             case "checkbox":
                 target.checked = value
