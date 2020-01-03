@@ -96,8 +96,27 @@ export interface GHTMLInputEvent{
 
 
 
+enum FormElement{
+    input,
+    select,
+    textarea
+}
 
 
+
+enum WriteInput{
+    text,
+    email,
+    password,
+    textarea
+}
+
+
+
+
+enum ThickInput{
+    checkbox
+}
 
 
 function add(tag:string, options?:DomProperties):GHTMLElement{
@@ -260,7 +279,10 @@ function createGHTMLElement(prop:createGHTMLElementProps): GHTMLElement{
         }
     }    
     //Bind control to data source
-    if(e.attributes.getNamedItem("name")){
+    //if(e.attributes.getNamedItem("name")){
+    //    e.control.bind0(e)
+    //}
+    if(t.toLowerCase() in FormElement){
         e.control.bind0(e)
     }
     return(e)
@@ -400,7 +422,7 @@ export interface GHTMLControlProps {
     view:string 
     root?:string
     bindTo?:string
-    bindToExternal?:GDataObject
+    bindToLocal?:GDataObject
 }
 
 
@@ -445,22 +467,24 @@ export class GHTMLControl {
 
         //Link for global Glider object
         this.gDoc = GDocument
-        
+
+        //Create static view
         this.e = {}
+        this.rootElement = createGHTML(prop.view, this, prop.root)
+        
+        // Link Store Object        
         if(prop.bindTo){
             this.bindingStore = this.gDoc.gData(prop.bindTo)}
         else{
-            if(prop.bindToExternal){
-                this.bindingStore = prop.bindToExternal}}
+            if(prop.bindToLocal){
+                this.bindingStore = prop.bindToLocal}}
 
-        //Register itself to global object for custom events
+        //Register itself to store and global object for custom events
+        if(this.bindingStore){    this.bindingStore.register(this)    }
         this.gDoc.register(this)
 
-        //Create static view
-        this.rootElement = createGHTML(prop.view, this, prop.root)
-
+        //Update DOM form elements
         this.up()
-
     }
 
 
@@ -544,55 +568,123 @@ export class GHTMLControl {
 
     public bind0(e:GHTMLElement):void{
         /*
-        Connect control and data store
+        Connect DOM Input elements to Control and Data Store
         */
-
         let type = this.t(e).type
         let nodeName = e.nodeName
-        let on = "input"
-
-        if(nodeName === "SELECT" || type == "checkbox"){
-            on = "change"
-        }
-        if(this.bindingStore){
-            e.addEventListener(on, this.bindingStore.updateData.bind(this.bindingStore))}
+        let on = "change"
+        if(type.toLowerCase() in WriteInput){    on = "input"    }
+        e.addEventListener(on, this.onInput.bind(this))
     }
 
 
 
 
-    protected up():void{
+    private onInput(e:Event):void{
         /*
-        Update DOM values from bindingStore
+        Get Input values, check validation and trigger events
         */
-        if(!this.bindingStore){    return    }
-        let bindingNames = Object.getOwnPropertyNames(this.bindingStore)
+        // Get variables
+        let target = <HTMLInputElement> e.target
+        let targetSelect = <HTMLSelectElement> e.target
+        let targetGHTMLE = <GHTMLElement> e.target
+        let name:string = target.name
+        let value:any
+        let type:string = target.type
+        let delay:string|null = target.getAttribute("gdelay")
+        
+        //Checkbox and radio button        
+        if(type.toLowerCase() in ThickInput){
+            value = target.checked
+        }
+        //Multiple select
+        else if(type == "select-multiple"){
+            let values:Array<string> = []
+            for (var i = targetSelect.selectedOptions.length - 1; i >= 0; i--) {
+                values.push( targetSelect.selectedOptions[i].value)
+             }
+             value = values
+        }
+        //other input
+        else{
+            value = target.value
+        }
 
-        // Every element
+        target.setCustomValidity("")
+
+        //Check validation status
+        if(target.willValidate && !target.validity.valid){
+            //Invalidate, get special message if exist
+            this.setValidationMessages(target)
+        }
+
+        //Prepare event
+        let event:GHTMLInputEvent = {
+            element:targetGHTMLE,
+            control: targetGHTMLE.control, 
+            name:name, 
+            value:value,
+            type:type
+        }
+        
+        //Call tracking method for user control
+        if(type.toLowerCase() in WriteInput && delay){
+            setTimeout(
+                this.inputDelay.bind(this), 
+                Number(delay),
+                value,
+                target,
+                event)
+        }
+        else{
+            this.input(event)
+            if(this.bindingStore){    this.bindingStore.updateData(event)    }
+        }
+
+    }
+
+
+
+
+    private inputDelay(actVal:string, input:HTMLInputElement, event:GHTMLInputEvent):void{
+        /*
+        Text input delay procedure
+        */
+        if(actVal == input.value){
+           this.input(event)
+           if(this.bindingStore){    this.bindingStore.updateData(event)    }
+        }
+    }
+
+
+
+
+    public up(name?:string, names?:Array<string>, triggerInput?:boolean):void{
+        /*
+        Update DOM Elements from bindingStore
+        */
+        let varNames:Array<string> = []
+        let tInput:boolean = true
+        if(!triggerInput){    tInput = false    }
+        if(name){            varNames.push(name)    }
+        else if(names){      varNames = names    }
+        else{                varNames = Object.getOwnPropertyNames(this.bindingStore)        }
+        
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
+            //Every DOM element
+            let target = <any>this.e[e]
 
-            let target = this.t(this.e[e])
-            let value:any
-            
-            //Element's name is in binding store
-            if(bindingNames.indexOf(target.name) > -1 ){
+            if(target.name && varNames.indexOf(target.name) > -1){
+                // There is a property in Store as same name with DOM "name" value
+                this.setDOM(target, Object(this.bindingStore)[target.name])
 
-                /*if(target.type == "select-one"){
-                    if(bindingNames.indexOf(target.name+"_list") > -1){
-                        value = Object(this.bindingStore)[target.name+"_list"]}
+                if(tInput){
+                    // Trigger input event
+                    let on = "change"
+                    if(target.type.toLowerCase() in WriteInput){    on = "input"    }
+                    let e = new Event(on, {'bubbles': true, 'cancelable': true})
+                    target.dispatchEvent(e)
                 }
-                else{*/
-                    value = Object(this.bindingStore)[target.name]
-                
-                this.updateDOM(target, value)
-                
-                // Trigger input event
-                let eType = "input"
-                if(target.type == "select-one"){
-                    eType = "change"
-                }
-                let e = new Event(eType, {'bubbles': true, 'cancelable': true})
-                target.dispatchEvent(e)
             }
         })
     }
@@ -600,91 +692,45 @@ export class GHTMLControl {
 
 
 
-    protected bindingSet(varname:string, value:any):void{
+    private setDOM(target:any, value:any):void{
         /*
-        Update bindingStore value and related DOM
-        */
-
-        //Check varname is exist in store
-        if(Object.getOwnPropertyNames(this.bindingStore).indexOf(varname) > -1){
-
-            //Search DOM element
-            Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
-
-                let target = this.t(this.e[e])
-                //for same name property with binding varname
-                if(target.name == varname){
-                    let store = <any>this.bindingStore
-
-                    // Update store
-                    if(target.type == "checkbox"){
-                        store[varname] = target.checked
-                    }
-                    else if(target.type == "radio"){
-                        if(target.checked){
-                            store[varname] = target.value
-                        }
-                    }
-                    else if(target.type == "select-one"){
-                        store[varname] = target.value
-                    }
-                    else{
-                        store[varname] = value
-                    }
-
-                    //Update DOM
-                    this.updateDOM(target, value)
-                }
-            })
-        }
-        else{
-            console.error("[Glider] Store variable not found: "+varname)
+        Update DOM Element
+        */        
+        let type = target.type
+        switch (type) {
+            case "checkbox":
+                target.checked = value
+                break;
+            case "radio":
+                if(target.value == value){    target.checked = true    }
+                else{    target.checked = false    }
+                break;
+            case "select-multiple":
+                Object.getOwnPropertyNames(target.options).forEach((o:string)=>{
+                    let opt = <HTMLOptionElement>target.options[o]
+                    let val:Array<any> = value
+                    if(val.indexOf(opt.value) > -1){    opt.selected = true    }
+                    else{    opt.selected = false    }
+                })
+                break;
+            case "select-one":
+                Object.getOwnPropertyNames(target.options).forEach((o:string)=>{
+                    let opt = <HTMLOptionElement>target.options[o]
+                    if(opt.value == value){    opt.selected = true    }
+                    else{    opt.selected = false    }
+                })
+                break;
+            default:
+                target.value = value
+                break;
         }
     }
-
-
-
-
-    protected updateDOM(target:any, value:any):void{
-        try{
-            let type = target.type
-            if(type == "checkbox"){
-                target = Object.assign(target, {checked:value})
-            }
-            if(type == "radio"){
-                if(target.value == value){
-                    target = Object.assign(target, {checked:true})
-                }
-            }
-            if(type == "select-one"){
-                try{
-                    let value_list = Object(this.bindingStore)[target.name+"_list"]
-                    while (target.options.length > 0) {                
-                        target.remove(0)
-                    }
-                    let t = target as GHTMLElement
-                    value_list.forEach((val:string)=>{
-                        t.add("option", {"value": val}).textContent = val
-                    })
-                }catch{}
-                target = Object.assign(target, {value:value})
-            }
-            else{
-                target = Object.assign(target, {value:value})   
-            }
-        }
-        catch{
-            console.error("[Glider] DOM not updated : "+target)
-        }
-    }
-
 
 
 
     //Override this method
     public input(e:GHTMLInputEvent):void{}
     
-
 
 
     public setValidationMessages(target:HTMLInputElement):void{
@@ -769,11 +815,11 @@ class GDataControl{
 
 
 export class GDataObject extends GDataControl {
-    
 
 
 
-    inputInterval:number = 0
+
+    private control:GHTMLControl
 
 
 
@@ -784,89 +830,31 @@ export class GDataObject extends GDataControl {
 
 
 
-    public updateData(e:Event):void{
+
+    public updateData(e:GHTMLInputEvent):void{
         /*
-        Update local variables form DOM
+        Update local variables
         */
-
-        // Get variables
-        let target = <HTMLInputElement> e.target
-        let targetGHTMLE = <GHTMLElement> e.target
-        let name:string = target.name
-        let value:any
-        let type:string = target.type
-        let self = <any>this
-        
-        //Check type of input
-        if(target.type == "checkbox"){
-            value = target.checked
-        }
-        else if(target.type == "radio"){
-            if(target.checked){
-                value = target.value
-            }
-        }
-        else if(target.type == "select-one"){
-            value = target.value
-        }
-        else{
-            value = target.value
-        }
-
-        //if(!value){    return    }
-
-        // Set values
-        if(name){
-            //Object.defineProperty(this, name, {value:value, configurable: true})}
-            self[name] = value}
-
-        target.setCustomValidity("")
-
-        //Check validation status
-        if(target.willValidate && !target.validity.valid){
-            //Invalidate, get special message if exist
-            targetGHTMLE.control.setValidationMessages(target)
-        }
-
-        
-        let event:GHTMLInputEvent = {
-            element:targetGHTMLE,
-            control: targetGHTMLE.control, 
-            name:name, 
-            value:value,
-            type:type
-        }
-
-        //Call tracking method for user control
-        if(type == "checkbox" || type == "radio"){
-            this.input(event)
-            event.control.input(event)
-        }
-        else{
-
-            setTimeout(
-                this.inputDelay.bind(this), 
-                this.inputInterval,
-                value,
-                target,
-                event)
+        let store = <any>this
+        if(Object.getOwnPropertyNames(store).indexOf(e.name) > -1){
+            store[e.name] = e.value
+            this.input(e)
         }
     }
 
 
 
 
-    private inputDelay(actVal:string, input:HTMLInputElement, event:GHTMLInputEvent):void{
-        /*
-        Text input delay procedure
-        */
-        if(actVal == input.value){
-           this.input(event)
-           event.control.input(event)
-        }
+    protected updateDOM(name?:string, names?:Array<string>, triggerInput?:boolean):void{
+        if(this.control){    this.control.up(name, names, triggerInput)    }
     }
 
 
+
+
+    register(control:GHTMLControl):void{
+        this.control = control
+    }
 
 
 
@@ -876,6 +864,7 @@ export class GDataObject extends GDataControl {
 
 
 }
+
 
 
 
