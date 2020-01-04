@@ -661,38 +661,45 @@ export class GHTMLControl {
 
 
 
-    public up(name?:string, names?:Array<string>, triggerInput?:boolean):void{
+    public up(prop?:{name?:string, names?:Array<string>, triggerInput?:boolean}):void{
         /*
         Update DOM Elements from bindingStore
         */
         let varNames:Array<string> = []
-        let tInput:boolean = true
-        if(!triggerInput){    tInput = false    }
-        if(name){            varNames.push(name)    }
-        else if(names){      varNames = names    }
-        else if(this.bindingStore){
-            varNames = Object.getOwnPropertyNames(this.bindingStore)        }
+        let tInput:boolean = false
+        if(prop){
+            if(prop.triggerInput){    tInput = true    }
+            if(prop.name){            varNames.push(prop.name)    }
+            else if(prop.names){      varNames = prop.names    }
+            else if(this.bindingStore){
+                varNames = Object.getOwnPropertyNames(this.bindingStore)        }
+        }
+        else{    varNames = Object.getOwnPropertyNames(this.bindingStore)        }
         
         Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
             
             //Every DOM element
             let target = <any>this.e[e]
+            let valueVar = Object(this.bindingStore)[target.name]
             let tag = target.tagName.toLowerCase()
             let optionsVarName = target.name+"_options"
             
             //Update Select element options
-            if(tag == "select" && varNames.indexOf(optionsVarName) > -1){
+            if(tag == "select" && Object.getOwnPropertyNames(this.bindingStore).indexOf(optionsVarName) > -1){
                 let options = Object(this.bindingStore)[optionsVarName]
                 
                 while (target.options.length > 0) { target.remove(0) }
                 options.forEach((opt:string)=>{
                     target.add("option", {"value": opt}).textContent = opt})
                 target.value = ""
+                // 
+                let bs:any = this.bindingStore
+                bs.fixSelectValues(target.name)
             }
             
             if(target.name && varNames.indexOf(target.name) > -1){
                 // There is a property in Store as same name with DOM "name" value
-                this.setDOM(target, Object(this.bindingStore)[target.name])
+                this.setDOM(target, valueVar)
 
                 if(tInput){
                     // Trigger input event
@@ -720,11 +727,12 @@ export class GHTMLControl {
             case "radio":
                 if(target.value == value){    target.checked = true    }
                 else{    target.checked = false    }
-                break;
+                break;                
             case "select-multiple":
+                let val:Array<any> = value
+                // Select values on target DOM
                 Object.getOwnPropertyNames(target.options).forEach((o:string)=>{
                     let opt = <HTMLOptionElement>target.options[o]
-                    let val:Array<any> = value
                     if(val.indexOf(opt.value) > -1){    opt.selected = true    }
                     else{    opt.selected = false    }
                 })
@@ -741,6 +749,7 @@ export class GHTMLControl {
                 break;
         }
     }
+
 
 
 
@@ -861,8 +870,32 @@ export class GDataObject extends GDataControl {
 
 
 
-    protected updateDOM(name?:string, names?:Array<string>, triggerInput?:boolean):void{
-        if(this.control){    this.control.up(name, names, triggerInput)    }
+    protected updateDOM(prop?:{name?:string, names?:Array<string>, triggerInput?:boolean}):void{
+        if(this.control){    this.control.up(prop)    }
+    }
+
+
+
+
+    private fixSelectValues(varName:string):void{
+        if(Object(this)[varName] && Object(this)[varName+"_options"]){
+            if(typeof(Object(this)[varName]) == typeof([])){
+                let pop:Array<string> = []
+                Object(this)[varName].forEach((val:string)=>{
+                    if(Object(this)[varName+"_options"].indexOf(val) == -1){
+                        pop.push(val)
+                    }
+                })
+                pop.forEach((p:string)=>{
+                    Object(this)[varName].pop(p)
+                })
+            }
+            else if(typeof(Object(this)[varName]) == typeof("")){
+                if(Object(this)[varName+"_options"].indexOf(Object(this)[varName]) == -1){
+                    Object(this)[varName] = ""
+                }
+            }
+        }
     }
 
 
