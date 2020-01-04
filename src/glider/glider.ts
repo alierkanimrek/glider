@@ -665,6 +665,7 @@ export class GHTMLControl {
         /*
         Update DOM Elements from bindingStore
         */
+        let map:any = {}    //{varname: HTMLELEMENT}
         let varNames:Array<string> = []
         let tInput:boolean = false
         if(prop){
@@ -676,39 +677,44 @@ export class GHTMLControl {
         }
         else{    varNames = Object.getOwnPropertyNames(this.bindingStore)        }
         
-        Object.getOwnPropertyNames(this.e).forEach((e:string)=>{
-            
-            //Every DOM element
+        //Generate map
+        Object.getOwnPropertyNames(this.e).forEach((e:any)=>{
             let target = <any>this.e[e]
+            if(target.name && varNames.indexOf(target.name) > -1){
+                map[varNames[varNames.indexOf(target.name)]] = target
+            }
+        })
+
+        // Process vars
+        Object.getOwnPropertyNames(map).forEach((varName:string)=>{
+            let target:any = map[varName]
             let valueVar = Object(this.bindingStore)[target.name]
             let tag = target.tagName.toLowerCase()
             let optionsVarName = target.name+"_options"
             
             //Update Select element options
-            if(tag == "select" && Object.getOwnPropertyNames(this.bindingStore).indexOf(optionsVarName) > -1){
-                let options = Object(this.bindingStore)[optionsVarName]
-                
+            if(tag == "select" &&  Object.getOwnPropertyNames(this.bindingStore).indexOf(optionsVarName) > -1){
+                let options = Object(this.bindingStore)[optionsVarName]               
                 while (target.options.length > 0) { target.remove(0) }
+
                 options.forEach((opt:string)=>{
                     target.add("option", {"value": opt}).textContent = opt})
                 target.value = ""
+
                 // 
                 let bs:any = this.bindingStore
                 bs.fixSelectValues(target.name)
             }
-            
-            if(target.name && varNames.indexOf(target.name) > -1){
-                // There is a property in Store as same name with DOM "name" value
-                this.setDOM(target, valueVar)
 
-                if(tInput){
-                    // Trigger input event
-                    let on = "change"
-                    if(target.type.toLowerCase() in WriteInput){    on = "input"    }
-                    let e = new Event(on, {'bubbles': true, 'cancelable': true})
-                    target.dispatchEvent(e)
-                }
-            }
+            this.setDOM(target, valueVar)
+
+            if(tInput){
+                // Trigger input event
+                let on = "change"
+                if(target.type.toLowerCase() in WriteInput){    on = "input"    }
+                let e = new Event(on, {'bubbles': true, 'cancelable': true})
+                target.dispatchEvent(e)
+            }            
         })
     }
 
