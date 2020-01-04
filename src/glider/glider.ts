@@ -639,12 +639,11 @@ export class GHTMLControl {
                 event)
         }
         else{
-            this.input(event)
             if(this.bindingStore){    
                 let bs:any = this.bindingStore
                 bs.updateData(event)    }
         }
-
+        this.input(event)
     }
 
 
@@ -655,11 +654,11 @@ export class GHTMLControl {
         Text input delay procedure
         */
         if(actVal == input.value){
-            this.input(event)
             if(this.bindingStore){    
                 let bs:any = this.bindingStore
                 bs.updateData(event)    }
         }
+        this.input(event)
     }
 
 
@@ -684,11 +683,19 @@ export class GHTMLControl {
         //Generate map
         Object.getOwnPropertyNames(this.e).forEach((e:any)=>{
             let target = <any>this.e[e]
-            if(target.name && varNames.indexOf(target.name) > -1){
-                map[varNames[varNames.indexOf(target.name)]] = target
+            if(target.tagName.toLowerCase() in FormElement){
+                if(target.name && varNames.indexOf(target.name) > -1){
+                    if(target.type.toLowerCase() == "radio"){
+                        if(target.value == Object(this.bindingStore)[target.name]){
+                            map[varNames[varNames.indexOf(target.name)]] = target        
+                        }
+                    }
+                    else{
+                        map[varNames[varNames.indexOf(target.name)]] = target
+                    }
+                }
             }
         })
-
         // Process vars
         Object.getOwnPropertyNames(map).forEach((varName:string)=>{
             let target:any = map[varName]
@@ -880,7 +887,7 @@ export class GDataObject extends GDataControl {
 
 
 
-    protected updateDOM(prop?:{name?:string, names?:Array<string>, triggerInput?:boolean}):void{
+    protected up(prop?:{name?:string, names?:Array<string>, triggerInput?:boolean}):void{
         if(this.control){    this.control.up(prop)    }
     }
 
