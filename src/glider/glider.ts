@@ -640,7 +640,9 @@ export class GHTMLControl {
         }
         else{
             this.input(event)
-            if(this.bindingStore){    this.bindingStore.updateData(event)    }
+            if(this.bindingStore){    
+                let bs:any = this.bindingStore
+                bs.updateData(event)    }
         }
 
     }
@@ -653,8 +655,10 @@ export class GHTMLControl {
         Text input delay procedure
         */
         if(actVal == input.value){
-           this.input(event)
-           if(this.bindingStore){    this.bindingStore.updateData(event)    }
+            this.input(event)
+            if(this.bindingStore){    
+                let bs:any = this.bindingStore
+                bs.updateData(event)    }
         }
     }
 
@@ -862,7 +866,7 @@ export class GDataObject extends GDataControl {
 
 
 
-    public updateData(e:GHTMLInputEvent):void{
+    private updateData(e:GHTMLInputEvent):void{
         /*
         Update local variables
         */
