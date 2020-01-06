@@ -556,10 +556,27 @@ export class GHTMLControl {
         This only triggers from GDocument navigation event
         Clears for all childs and unregister from GDocument
         */
-        while(this.rootElement.children[0]){
-            this.rootElement.children[0].remove()
-        }
-        this.onRemove()
+        //while(this.rootElement.children[0]){
+        //    this.rootElement.children[0].remove()
+        //}
+        this.rootElement.childNodes.forEach((cn:any)=>{
+            try{
+                if(cn.control.id == this.id){
+                    try{
+                        cn.childNodes.forEach((c:any)=>{
+                            if(c.control.id != this.id){
+                                c.control.clear()
+                            }
+                            c.remove()
+                        })
+                    }
+                    catch{}
+                    cn.control.onRemove()
+                    cn.remove()
+                }
+            }
+            catch{}
+        })
     }
 
 
@@ -668,6 +685,7 @@ export class GHTMLControl {
         /*
         Update DOM Elements from bindingStore
         */
+        if(!this.bindingStore){    return     }
         let map:any = {}    //{varname: HTMLELEMENT}
         let varNames:Array<string> = []
         let tInput:boolean = false
@@ -685,6 +703,7 @@ export class GHTMLControl {
             let target = <any>this.e[e]
             if(target.tagName.toLowerCase() in FormElement){
                 if(target.name && varNames.indexOf(target.name) > -1){
+                    // Radio button
                     if(target.type.toLowerCase() == "radio"){
                         if(target.value == Object(this.bindingStore)[target.name]){
                             map[varNames[varNames.indexOf(target.name)]] = target        
@@ -861,7 +880,7 @@ export class GDataObject extends GDataControl {
 
 
 
-    private control:GHTMLControl
+    protected control:GHTMLControl
 
 
 
@@ -1013,11 +1032,17 @@ class GDoc{
         Navigation event handler
         */
         if(!uri){    let uri = ""    }
+
+        //Clear body
+        document.body.childNodes.forEach((n:any)=>{    n.remove()    })
+        
+        //Clear controls
         this.controls.forEach((c: GHTMLControl) => {
             try{    c.clear()    }
             catch{}
         })
         this.controls = []
+        
         if(this.fileProtocol){
             window.history.pushState('', '', '#'+uri)
         }
