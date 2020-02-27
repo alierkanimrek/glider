@@ -659,8 +659,8 @@ export class GHTMLControl {
             if(this.bindingStore){    
                 let bs:any = this.bindingStore
                 bs.updateData(event)    }
+            this.input(event)
         }
-        this.input(event)
     }
 
 
@@ -674,8 +674,8 @@ export class GHTMLControl {
             if(this.bindingStore){    
                 let bs:any = this.bindingStore
                 bs.updateData(event)    }
+            this.input(event)
         }
-        this.input(event)
     }
 
 
