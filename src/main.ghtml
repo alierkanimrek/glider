@@ -1,0 +1,31 @@
+approot
+    NAV class=navbar is-fixed-top is-primary role=navigation aria-label=main navigation
+        DIV class=container
+            DIV class=navbar-brand
+                SPAN class=navbar-item
+                    IMG class=logo src=glider_256.png  style=height:2.5rem;
+                    SPAN style=font-size:1.5rem;
+                    | lider
+                A gid=vw_menu_button role=button class=navbar-burger aria-label=navMenu aria-expanded=false
+                    SPAN aria-hidden=true
+                    SPAN aria-hidden=true
+                    SPAN aria-hidden=true
+            DIV gid=vw_nav_menu class=navbar-menu 
+                DIV class=navbar-end
+                    A gid=vw_link_home class=navbar-item
+                    | Home
+                    A gid=vw_link_settings class=navbar-item
+                    | Settings
+    SECTION class=section style=min-height:72vh;
+        DIV gid=vw_main_container class=container
+    FOOTER class=footer
+        DIV class=content has-text-centered
+            P
+            | Glider source code is licensed
+                A href=http://opensource.org/licenses/mit-license.php
+                | MIT
+            P
+                A href=https://github.com/alierkanimrek/glider target=_blank
+                    I class=fab fa-github
+                    SPAN 
+                    | &nbsp;Github

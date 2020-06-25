@@ -1,0 +1,6 @@
+DIV class=hero-body
+    DIV class=container
+        H1 class=title
+        | Glider Example
+        H2 class=subtitle
+        | Build ultra lightweight web applications with Typescript

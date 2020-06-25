@@ -30,7 +30,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-
+export let version:string = "0.1"
 
 export interface DomProperties {
     [name: string]: string | boolean
@@ -78,11 +78,12 @@ export interface BindingObject {
 }
 
 
-interface Store {
+export interface Store {
     [name:string]:GDataObject
 }
 
 
+//export let Store:Store = {}
 
 
 export interface GHTMLInputEvent{
@@ -983,7 +984,7 @@ class GDoc{
 
     constructor() {
         console.info("[Glider] Initializing...")
-
+        console.debug("[Glider] Version "+version)
         //Watch navigation 
         window.addEventListener("popstate", this.popstate.bind(this))
 
@@ -1034,7 +1035,9 @@ class GDoc{
         if(!uri){    let uri = ""    }
 
         //Clear body
-        document.body.childNodes.forEach((n:any)=>{    n.remove()    })
+        document.body.childNodes.forEach((n:any)=>{
+            if(n.tagName){    n.remove()    }
+        })
         
         //Clear controls
         this.controls.forEach((c: GHTMLControl) => {

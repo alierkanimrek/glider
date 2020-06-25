@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="640"
+   height="640"
+   viewBox="0 0 169.33333 169.33333"
+   version="1.1"
+   id="svg821"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="glider.svg"
+   inkscape:export-filename="/home/ali/glider_256.png"
+   inkscape:export-xdpi="38.400002"
+   inkscape:export-ydpi="38.400002">
+  <defs
+     id="defs815" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.0125"
+     inkscape:cx="315.52795"
+     inkscape:cy="233.96992"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     width="640px"
+     inkscape:window-width="1869"
+     inkscape:window-height="1017"
+     inkscape:window-x="51"
+     inkscape:window-y="35"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata818">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-127.66666)">
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#8000ff;stroke-width:14.99999971;stroke-linecap:round;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1"
+       d="m 98.989024,226.72807 c -1.06872,8.66848 -12.212225,2.83608 -14.407581,-1.7763 -5.949334,-12.49929 6.359441,-24.86189 17.960187,-27.03887 20.75094,-3.89403 37.97714,14.60621 39.67014,34.14408 2.48449,28.67254 -22.91279,51.33705 -50.327906,52.30142 -36.540098,1.28534 -64.792569,-31.23369 -64.932756,-66.51176 -0.176341,-44.39386 39.559912,-78.2958 82.695632,-77.56403"
+       id="path1370"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccscc" />
+  </g>
+</svg>
