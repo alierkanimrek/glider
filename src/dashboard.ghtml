@@ -1,6 +1,35 @@
 DIV class=hero-body
     DIV class=container
         H1 class=title
-        | Glider Example
+        | Glider 
         H2 class=subtitle
         | Build ultra lightweight web applications with Typescript
+        DIV class=columns
+            DIV class=column style=overflow:auto;
+                DIV class=box
+                    H2 class=subtitle has-text-weight-bold
+                    | Create with GHTML
+                    P
+                    | GHTML is simplified syntax of HTML, so you know everything already, HTML+CSS. 
+                    PRE style=padding:0;
+                        CODE gid=ghtmlcode
+            DIV class=column style=overflow:auto;
+                DIV class=box
+                    H2 class=subtitle has-text-weight-bold
+                    | Control with Typescript
+                    P
+                    | Don't need to learn complex APIs and read long documents, just a few helper functions and simple app flow.
+                    PRE style=padding:0;
+                        CODE gid=tscode class=ts
+ 
+            DIV class=column style=overflow:auto;
+                DIV class=box
+                    H2 class=subtitle has-text-weight-bold
+                    | Highlights 
+                    UL
+                        LI
+                        | Glider is only ~30kb file, compiles quickly and loads immediately.
+                        LI
+                        | Form Binding and paging support
+                        LI
+                        | Classic Real DOM manipulation system

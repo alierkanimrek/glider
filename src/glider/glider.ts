@@ -698,7 +698,7 @@ export class GHTMLControl {
                 varNames = Object.getOwnPropertyNames(this.bindingStore)        }
         }
         else{    varNames = Object.getOwnPropertyNames(this.bindingStore)        }
-        
+
         //Generate map
         Object.getOwnPropertyNames(this.e).forEach((e:any)=>{
             let target = <any>this.e[e]
@@ -715,7 +715,12 @@ export class GHTMLControl {
                     }
                 }
             }
+            
+            else if(varNames.indexOf(e+"_textContent") > -1 ){
+                target.textContent = Object(this.bindingStore)[e+"_textContent"]
+            }
         })
+
         // Process vars
         Object.getOwnPropertyNames(map).forEach((varName:string)=>{
             let target:any = map[varName]

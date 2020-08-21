@@ -16,7 +16,7 @@ approot
                     | Home
                     A gid=vw_link_settings class=navbar-item
                     | Settings
-    SECTION class=section style=min-height:72vh;
+    SECTION class=section style=min-height:65vh;
         DIV gid=vw_main_container class=container
     FOOTER class=footer
         DIV class=content has-text-centered
